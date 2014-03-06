@@ -156,6 +156,10 @@ describe OAuthenticator::Middleware do
     assert_response(401, /Authorization header is missing/, *oapp.call({}))
   end
 
+  it 'complains about a blank Authorization header' do
+    assert_response(401, /Authorization header is blank/, *oapp.call({'HTTP_AUTHORIZATION' => ' '}))
+  end
+
   it 'complains about a non-OAuth Authentication header' do
     assert_response(401, /Authorization scheme is not OAuth/, *oapp.call({'HTTP_AUTHORIZATION' => 'Authorization: Basic QWxhZGRpbjpvcGVuIHNlc2FtZQ=='}))
   end
@@ -337,6 +341,30 @@ describe OAuthenticator::Middleware do
       %q(oauth_timestamp="1391021695", ) +
       %q(oauth_version="1.0")
     assert_response(401, /Authorization oauth_signature_method.*is missing/m, *oapp.call(request.env))
+  end
+  it 'specifies an invalid signature method' do
+    Timecop.travel Time.at 1391021695
+    consumer # cause this to be created
+    request = Rack::Request.new(Rack::MockRequest.env_for('/', :method => 'GET'))
+    request.env['HTTP_AUTHORIZATION'] = %q(OAuth oauth_consumer_key="test_client_app_key", ) +
+      %q(oauth_nonce="c1c2bd8676d44e48691c8dceffa66a96", ) +
+      %q(oauth_signature="Xy1s5IUn8x0U2KPyHBw4B2cHZMo%3D", ) +
+      %q(oauth_signature_method="ROT13", ) +
+      %q(oauth_timestamp="1391021695", ) +
+      %q(oauth_version="1.0")
+    assert_response(401, /Authorization oauth_signature_method.*must be one of HMAC-SHA1, RSA-SHA1, PLAINTEXT; got: ROT13/m, *oapp.call(request.env))
+  end
+  it 'has an invalid signature' do
+    Timecop.travel Time.at 1391021695
+    consumer # cause this to be created
+    request = Rack::Request.new(Rack::MockRequest.env_for('/', :method => 'GET'))
+    request.env['HTTP_AUTHORIZATION'] = %q(OAuth oauth_consumer_key="test_client_app_key", ) +
+      %q(oauth_nonce="c1c2bd8676d44e48691c8dceffa66a96", ) +
+      %q(oauth_signature="totallylegit", ) +
+      %q(oauth_signature_method="HMAC-SHA1", ) +
+      %q(oauth_timestamp="1391021695", ) +
+      %q(oauth_version="1.0")
+    assert_response(401, /Authorization oauth_signature.*is invalid/m, *oapp.call(request.env))
   end
 
   describe :bypass do
