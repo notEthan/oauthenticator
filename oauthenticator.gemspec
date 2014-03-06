@@ -20,10 +20,17 @@ Gem::Specification.new do |spec|
     'lib/oauthenticator/version.rb'
   ]
   spec.executables   = []
-  spec.test_files    = []
+  spec.test_files    = [
+    'test/oauthenticator_test.rb'
+  ]
   spec.require_paths = ['lib']
 
   spec.add_runtime_dependency "rack"
   spec.add_runtime_dependency "simple_oauth"
   spec.add_runtime_dependency "json"
+  spec.add_development_dependency "rake"
+  spec.add_development_dependency "minitest"
+  spec.add_development_dependency "minitest-reporters"
+  spec.add_development_dependency "rack-test"
+  spec.add_development_dependency "timecop"
 end
