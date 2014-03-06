@@ -24,6 +24,8 @@ module OAuthenticator
     # question methods to indicate whether oauth header parameters were included in the Authorization 
     OAUTH_ATTRIBUTE_KEYS.each { |key| define_method("#{key}?") { oauth_header_params.key?(key) } }
 
+    VALID_SIGNATURE_METHODS = %w(HMAC-SHA1 RSA-SHA1 PLAINTEXT).map(&:freeze).freeze
+
     class << self
       def from_rack_request(request)
         new({
@@ -154,12 +156,57 @@ module OAuthenticator
       simple_oauth_header = SimpleOAuth::Header.new(request_method, url, params, authorization)
     end
 
-    def timestamp_valid_past
-      timestamp_valid_period
-    end
 
-    def timestamp_valid_future
-      timestamp_valid_period
+    module ConfigMethods
+      def timestamp_valid_period
+        config_method_not_implemented
+      end
+
+      def timestamp_valid_past
+        timestamp_valid_period
+      end
+
+      def timestamp_valid_future
+        timestamp_valid_period
+      end
+
+      def allowed_signature_methods
+        VALID_SIGNATURE_METHODS
+      end
+
+      def consumer_secret
+        config_method_not_implemented
+      end
+
+      def access_token_secret
+        config_method_not_implemented
+      end
+
+      def nonce_used?
+        config_method_not_implemented
+      end
+
+      def use_nonce!
+        config_method_not_implemented
+      end
+
+      def access_token_belongs_to_consumer?
+        config_method_not_implemented
+      end
+    end
+    include ConfigMethods
+
+    def config_method_not_implemented
+      caller_name = caller[0].match(%r(in `(.*?)'))[1]
+      using_middleware = caller.any? { |l| l =~ %r(oauthenticator/middleware.rb:.*`call') }
+      message = "method \##{caller_name} must be implemented on a module of oauth config methods, which is " + begin
+        if using_middleware
+          "passed to OAuthenticator::Middleware using the option :config_methods."
+        else
+          "included in a subclass of OAuthenticator::SignedRequest, typically by passing it to OAuthenticator::SignedRequest.including_config(your_module)."
+        end
+      end + " Please consult the documentation."
+      raise NotImplementedError, message
     end
   end
 end
