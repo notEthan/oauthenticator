@@ -21,6 +21,9 @@ module OAuthenticator
     # readers for oauth header parameters 
     OAUTH_ATTRIBUTE_KEYS.each { |key| define_method(key) { oauth_header_params[key] } }
 
+    # question methods to indicate whether oauth header parameters were included in the Authorization 
+    OAUTH_ATTRIBUTE_KEYS.each { |key| define_method("#{key}?") { oauth_header_params.key?(key) } }
+
     class << self
       def from_rack_request(request)
         new({
@@ -53,7 +56,7 @@ module OAuthenticator
           errors = Hash.new { |h,k| h[k] = [] }
 
           # timestamp
-          if !oauth_header_params.key?(:timestamp)
+          if !timestamp?
             errors['Authorization oauth_timestamp'] << "is missing"
           elsif timestamp !~ /\A\s*\d+\s*\z/
             errors['Authorization oauth_timestamp'] << "is not an integer - got: #{timestamp}"
@@ -67,7 +70,7 @@ module OAuthenticator
           end
 
           # oauth version
-          if oauth_header_params.key?(:version) && version != '1.0'
+          if version? && version != '1.0'
             errors['Authorization oauth_version'] << "must be 1.0; got: #{version}"
           end
 
@@ -75,7 +78,7 @@ module OAuthenticator
           secrets = {}
 
           # consumer / client application
-          if !oauth_header_params.key?(:consumer_key)
+          if !consumer_key?
             errors['Authorization oauth_consumer_key'] << "is missing"
           else
             secrets[:consumer_secret] = consumer_secret
@@ -85,7 +88,7 @@ module OAuthenticator
           end
 
           # access token
-          if oauth_header_params.key?(:token)
+          if token?
             secrets[:token_secret] = access_token_secret
             if !secrets[:token_secret]
               errors['Authorization oauth_token'] << 'is invalid'
@@ -95,14 +98,14 @@ module OAuthenticator
           end
 
           # nonce
-          if !oauth_header_params.key?(:nonce)
+          if !nonce?
             errors['Authorization oauth_nonce'] << "is missing"
           elsif nonce_used?
             errors['Authorization oauth_nonce'] << "has already been used"
           end
 
           # signature method
-          if !oauth_header_params.key?(:signature_method)
+          if !signature_method?
             errors['Authorization oauth_signature_method'] << "is missing"
           elsif !allowed_signature_methods.any? { |sm| signature_method.downcase == sm.downcase }
             errors['Authorization oauth_signature_method'] << "must be one of " +
@@ -110,7 +113,7 @@ module OAuthenticator
           end
 
           # signature
-          if !oauth_header_params.key?(:signature)
+          if !signature?
             errors['Authorization oauth_signature'] << "is missing"
           end
 
