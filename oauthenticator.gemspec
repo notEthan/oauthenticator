@@ -13,8 +13,17 @@ Gem::Specification.new do |spec|
   spec.homepage      = %q(https://github.com/notEthan/oauthenticator)
   spec.license       = 'MIT'
 
-  spec.files         = ['lib/oauthenticator.rb', 'lib/oauthenticator/version.rb']
+  spec.files         = [
+    'lib/oauthenticator.rb',
+    'lib/oauthenticator/middleware.rb',
+    'lib/oauthenticator/signed_request.rb',
+    'lib/oauthenticator/version.rb'
+  ]
   spec.executables   = []
   spec.test_files    = []
   spec.require_paths = ['lib']
+
+  spec.add_runtime_dependency "rack"
+  spec.add_runtime_dependency "simple_oauth"
+  spec.add_runtime_dependency "json"
 end
