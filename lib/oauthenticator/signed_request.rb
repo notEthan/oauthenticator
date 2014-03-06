@@ -12,7 +12,7 @@ module OAuthenticator
       end
     end
 
-    ATTRIBUTE_KEYS = %w(request_method url body media_type authorization)
+    ATTRIBUTE_KEYS = %w(request_method url body media_type authorization).map(&:freeze).freeze
 
     # readers 
     ATTRIBUTE_KEYS.each { |attribute_key| define_method(attribute_key) { @attributes[attribute_key] } }
