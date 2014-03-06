@@ -67,16 +67,23 @@ module OAuthenticator
             errors['Authorization oauth_version'] << "must be 1.0; got: #{oauth_header_params[:version]}"
           end
 
+          # she's filled with secrets
+          secrets = {}
+
           # consumer / client application
           if !oauth_header_params.key?(:consumer_key)
             errors['Authorization oauth_consumer_key'] << "is missing"
-          elsif !consumer_secret
-            errors['Authorization oauth_consumer_key'] << 'is invalid'
+          else
+            secrets[:consumer_secret] = consumer_secret
+            if !secrets[:consumer_secret]
+              errors['Authorization oauth_consumer_key'] << 'is invalid'
+            end
           end
 
           # access token
           if oauth_header_params.key?(:token)
-            if !access_token_secret
+            secrets[:token_secret] = access_token_secret
+            if !secrets[:token_secret]
               errors['Authorization oauth_token'] << 'is invalid'
             elsif !access_token_belongs_to_consumer?
               errors['Authorization oauth_token'] << 'does not belong to the specified consumer'
@@ -107,9 +114,6 @@ module OAuthenticator
             errors
           else
             # proceed to check signature
-            secrets = {}
-            secrets[:consumer_secret] = consumer_secret
-            secrets[:token_secret] = access_token_secret if access_token_secret
             if !simple_oauth_header.valid?(secrets)
               {'Authorization oauth_signature' => ['is invalid']}
             else
