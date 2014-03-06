@@ -1,5 +1,7 @@
 # encoding: utf-8
 
+require 'simplecov'
+
 # NO EXPECTATIONS 
 ENV["MT_NO_EXPECTATIONS"]
 
