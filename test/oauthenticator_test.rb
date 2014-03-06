@@ -104,6 +104,21 @@ describe OAuthenticator::Middleware do
     assert_response(200, '☺', *oapp.call(request.env))
   end
 
+  it 'makes a valid two-legged signed request with a form encoded body (generated)' do
+    request = Rack::Request.new(Rack::MockRequest.env_for('/',
+      :method => 'GET',
+      :input => 'a=b&a=c',
+      'CONTENT_TYPE' => 'application/x-www-form-urlencoded; charset=UTF8',
+    ))
+    request.env['HTTP_AUTHORIZATION'] = SimpleOAuth::Header.new(
+      request.request_method,
+      request.url,
+      [['a', 'b'], ['a', 'c']],
+      {:consumer_key => consumer_key, :consumer_secret => consumer_secret}
+    ).to_s
+    assert_response(200, '☺', *oapp.call(request.env))
+  end
+
   it 'makes a valid three-legged signed request (generated)' do
     request = Rack::Request.new(Rack::MockRequest.env_for('/', :method => 'GET'))
     request.env['HTTP_AUTHORIZATION'] = SimpleOAuth::Header.new(
