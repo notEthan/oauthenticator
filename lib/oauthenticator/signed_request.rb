@@ -13,9 +13,13 @@ module OAuthenticator
     end
 
     ATTRIBUTE_KEYS = %w(request_method url body media_type authorization).map(&:freeze).freeze
+    OAUTH_ATTRIBUTE_KEYS = %w(consumer_key token timestamp nonce version signature_method signature).map(&:to_sym).freeze
 
     # readers 
     ATTRIBUTE_KEYS.each { |attribute_key| define_method(attribute_key) { @attributes[attribute_key] } }
+
+    # readers for oauth header parameters 
+    OAUTH_ATTRIBUTE_KEYS.each { |key| define_method(key) { oauth_header_params[key] } }
 
     class << self
       def from_rack_request(request)
@@ -51,20 +55,20 @@ module OAuthenticator
           # timestamp
           if !oauth_header_params.key?(:timestamp)
             errors['Authorization oauth_timestamp'] << "is missing"
-          elsif oauth_header_params[:timestamp] !~ /\A\s*\d+\s*\z/
-            errors['Authorization oauth_timestamp'] << "is not an integer - got: #{oauth_header_params[:timestamp]}"
+          elsif timestamp !~ /\A\s*\d+\s*\z/
+            errors['Authorization oauth_timestamp'] << "is not an integer - got: #{timestamp}"
           else
-            timestamp_i = oauth_header_params[:timestamp].to_i
+            timestamp_i = timestamp.to_i
             if timestamp_i < Time.now.to_i - timestamp_valid_past
-              errors['Authorization oauth_timestamp'] << "is too old: #{oauth_header_params[:timestamp]}"
+              errors['Authorization oauth_timestamp'] << "is too old: #{timestamp}"
             elsif timestamp_i > Time.now.to_i + timestamp_valid_future
-              errors['Authorization oauth_timestamp'] << "is too far in the future: #{oauth_header_params[:timestamp]}"
+              errors['Authorization oauth_timestamp'] << "is too far in the future: #{timestamp}"
             end
           end
 
           # oauth version
-          if oauth_header_params.key?(:version) && oauth_header_params[:version] != '1.0'
-            errors['Authorization oauth_version'] << "must be 1.0; got: #{oauth_header_params[:version]}"
+          if oauth_header_params.key?(:version) && version != '1.0'
+            errors['Authorization oauth_version'] << "must be 1.0; got: #{version}"
           end
 
           # she's filled with secrets
@@ -100,9 +104,9 @@ module OAuthenticator
           # signature method
           if !oauth_header_params.key?(:signature_method)
             errors['Authorization oauth_signature_method'] << "is missing"
-          elsif !allowed_signature_methods.any? { |sm| oauth_header_params[:signature_method].downcase == sm.downcase }
+          elsif !allowed_signature_methods.any? { |sm| signature_method.downcase == sm.downcase }
             errors['Authorization oauth_signature_method'] << "must be one of " +
-              "#{allowed_signature_methods.join(', ')}; got: #{oauth_header_params[:signature_method]}"
+              "#{allowed_signature_methods.join(', ')}; got: #{signature_method}"
           end
 
           # signature

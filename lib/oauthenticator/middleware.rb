@@ -34,8 +34,8 @@ module OAuthenticator
           response_headers = {"WWW-Authenticate" => %q(OAuth realm="/"), 'Content-Type' => 'application/json'}
           [401, response_headers, [JSON.pretty_generate(body_object)]]
         else
-          env["oauth.consumer_key"] = oauth_request.oauth_header_params[:consumer_key]
-          env["oauth.access_token"] = oauth_request.oauth_header_params[:token]
+          env["oauth.consumer_key"] = oauth_request.consumer_key
+          env["oauth.access_token"] = oauth_request.token
           env["oauth.authenticated"] = true
           @app.call(env)
         end
