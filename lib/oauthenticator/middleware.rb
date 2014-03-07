@@ -30,9 +30,7 @@ module OAuthenticator
         oauth_signed_request_class = OAuthenticator::SignedRequest.including_config(@options[:config_methods])
         oauth_request = oauth_signed_request_class.from_rack_request(request)
         if oauth_request.errors
-          body_object = {'errors' => oauth_request.errors}
-          response_headers = {"WWW-Authenticate" => %q(OAuth realm="/"), 'Content-Type' => 'application/json'}
-          [401, response_headers, [JSON.pretty_generate(body_object)]]
+          unauthorized_response({'errors' => oauth_request.errors})
         else
           env["oauth.consumer_key"] = oauth_request.consumer_key
           env["oauth.access_token"] = oauth_request.token
@@ -40,6 +38,14 @@ module OAuthenticator
           @app.call(env)
         end
       end
+    end
+
+    # the response for an unauthorized request. the argument will be a hash with the key 'errors', whose value 
+    # is a hash with string keys indicating attributes with errors, and values being arrays of strings 
+    # indicating error messages on the attribute key.. 
+    def unauthorized_response(error_object)
+      response_headers = {"WWW-Authenticate" => %q(OAuth realm="/"), 'Content-Type' => 'application/json'}
+      [401, response_headers, [JSON.pretty_generate(error_object)]]
     end
   end
 end
