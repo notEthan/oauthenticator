@@ -156,46 +156,10 @@ module OAuthenticator
       simple_oauth_header = SimpleOAuth::Header.new(request_method, url, params, authorization)
     end
 
-
-    module ConfigMethods
-      def timestamp_valid_period
-        config_method_not_implemented
-      end
-
-      def timestamp_valid_past
-        timestamp_valid_period
-      end
-
-      def timestamp_valid_future
-        timestamp_valid_period
-      end
-
-      def allowed_signature_methods
-        VALID_SIGNATURE_METHODS
-      end
-
-      def consumer_secret
-        config_method_not_implemented
-      end
-
-      def access_token_secret
-        config_method_not_implemented
-      end
-
-      def nonce_used?
-        config_method_not_implemented
-      end
-
-      def use_nonce!
-        config_method_not_implemented
-      end
-
-      def access_token_belongs_to_consumer?
-        config_method_not_implemented
-      end
-    end
+    require 'oauthenticator/config_methods'
     include ConfigMethods
 
+    private
     def config_method_not_implemented
       caller_name = caller[0].match(%r(in `(.*?)'))[1]
       using_middleware = caller.any? { |l| l =~ %r(oauthenticator/middleware.rb:.*`call') }

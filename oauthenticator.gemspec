@@ -16,6 +16,7 @@ Gem::Specification.new do |spec|
   spec.files         = [
     'lib/oauthenticator.rb',
     'lib/oauthenticator/middleware.rb',
+    'lib/oauthenticator/config_methods.rb',
     'lib/oauthenticator/signed_request.rb',
     'lib/oauthenticator/version.rb'
   ]
