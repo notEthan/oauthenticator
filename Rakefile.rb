@@ -5,3 +5,7 @@ Rake::TestTask.new do |t|
   t.verbose = true
 end
 task 'default' => 'test'
+
+require 'yard'
+YARD::Rake::YardocTask.new do |t|
+end

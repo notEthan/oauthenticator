@@ -35,4 +35,10 @@ Gem::Specification.new do |spec|
   spec.add_development_dependency "rack-test"
   spec.add_development_dependency "timecop"
   spec.add_development_dependency "simplecov"
+  begin # things for yard
+    spec.add_development_dependency "yard"
+    spec.add_development_dependency "rdiscount"
+    spec.add_development_dependency "redcarpet"
+    spec.add_development_dependency "rdoc", "~> 3.9.0"
+  end
 end
