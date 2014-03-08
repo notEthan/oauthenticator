@@ -168,6 +168,11 @@ module OAuthenticator
       end
     end
 
+    require 'oauthenticator/config_methods'
+    include ConfigMethods
+
+    private
+
     # hash of header params. keys should be a subset of OAUTH_ATTRIBUTE_KEYS.
     def oauth_header_params
       @oauth_header_params ||= SimpleOAuth::Header.parse(authorization)
@@ -193,10 +198,6 @@ module OAuthenticator
       simple_oauth_header = SimpleOAuth::Header.new(request_method, url, params, authorization)
     end
 
-    require 'oauthenticator/config_methods'
-    include ConfigMethods
-
-    private
     # raise a nice error message for a method that needs to be implemented on a module of config methods 
     def config_method_not_implemented
       caller_name = caller[0].match(%r(in `(.*?)'))[1]
