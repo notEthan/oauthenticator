@@ -4,14 +4,23 @@ require 'json'
 require 'oauthenticator/signed_request'
 
 module OAuthenticator
+  # Rack middleware to determine if the incoming request is signed authentically with OAuth 1.0.
+  #
+  # If the request is not authentically signed, then the middleware responds with 401 Unauthorized, with the 
+  # body a JSON object indicating errors encountered authenticating the request. The error object is 
+  # structured like rails / ActiveResource:
+  #
+  #     {'errors': {'attribute1': ['messageA', 'messageB'], 'attribute2': ['messageC']}}
   class Middleware
     # options:
     #
-    # - :bypass - a proc which will be called with a Rack::Request, which must have a boolean result. 
+    # - `:bypass` - a proc which will be called with a Rack::Request, which must have a boolean result. 
     #   if the result is true, authorization checking is bypassed. if false, the request is authenticated 
     #   and responds 401 if not authenticated.
-    # - :config_methods - a Module which defines necessary methods for an OAuthenticator::SignedRequest to determine 
-    #   if it is validly signed.
+    #
+    # - `:config_methods` - a Module which defines necessary methods for an {OAuthenticator::SignedRequest} to 
+    #   determine if it is validly signed. See documentation for {OAuthenticator::ConfigMethods} 
+    #   for details of what this module must implement.
     def initialize(app, options={})
       @app=app
       @options = options
@@ -20,6 +29,7 @@ module OAuthenticator
       end
     end
 
+    # call the middleware!
     def call(env)
       request = Rack::Request.new(env)
 

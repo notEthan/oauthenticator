@@ -1,9 +1,23 @@
 require 'simple_oauth'
 
 module OAuthenticator
+  # this class represents an OAuth signed request. its primary user-facing method is {#errors}, which returns 
+  # nil if the request is valid and authentic, or a helpful object of error messages describing what was 
+  # invalid if not. 
+  #
+  # this class is not useful on its own, as various methods must be implemented on a module to be included 
+  # before the implementation is complete enough to use. see the README and the documentation for the module 
+  # {OAuthenticator::ConfigMethods} for details. to pass such a module to 
+  # {OAuthenticator::SignedRequest}, use {.including_config}, like 
+  # `OAuthenticator::SignedRequest.including_config(config_module)`.
   class SignedRequest
     class << self
       # returns a subclass of OAuthenticator::SignedRequest which includes the given config module 
+      #
+      # @param config_methods_module [Module] a module which implements the methods described in the 
+      # documentation for {OAuthenticator::ConfigMethods} and the README
+      #
+      # @return [Class] subclass of SignedRequest with the given module included 
       def including_config(config_methods_module)
         @extended_classes ||= Hash.new do |h, confmodule|
           h[confmodule] = Class.new(::OAuthenticator::SignedRequest).send(:include, confmodule)
@@ -27,6 +41,13 @@ module OAuthenticator
     VALID_SIGNATURE_METHODS = %w(HMAC-SHA1 RSA-SHA1 PLAINTEXT).map(&:freeze).freeze
 
     class << self
+      # instantiates a `OAuthenticator::SignedRequest` (subclass thereof, more precisely) representing a 
+      # request given as a Rack::Request.
+      #
+      # like {#initialize}, this should be called on a subclass of SignedRequest created with {.including_config}
+      #
+      # @param request [Rack::Request]
+      # @return [subclass of OAuthenticator::SignedRequest]
       def from_rack_request(request)
         new({
           :request_method => request.request_method,
@@ -38,6 +59,8 @@ module OAuthenticator
       end
     end
 
+    # initialize a {SignedRequest}. this should not be called on OAuthenticator::SignedRequest directly, but 
+    # a subclass made with {.including_config} - see {SignedRequest}'s documentation.
     def initialize(attributes)
       @attributes = attributes.inject({}){|acc, (k,v)| acc.update((k.is_a?(Symbol) ? k.to_s : k) => v) }
       extra_attributes = @attributes.keys - ATTRIBUTE_KEYS
@@ -46,6 +69,17 @@ module OAuthenticator
       end
     end
 
+    # inspects the request represented by this instance of SignedRequest. if the request is authentically 
+    # signed with OAuth, returns nil to indicate that there are no errors. if the request is inauthentic or 
+    # invalid for any reason, this returns a hash containing the reason(s) why the request is invalid.
+    #
+    # The error object's structure is a hash with string keys indicating attributes with errors, and values 
+    # being arrays of strings indicating error messages on the attribute key. this structure takes after 
+    # structured rails / ActiveResource, and looks like:
+    #
+    #     {'attribute1': ['messageA', 'messageB'], 'attribute2': ['messageC']}
+    #
+    # @return [nil, Hash<String, Array<String>>] either nil or a hash of errors
     def errors
       @errors ||= begin
         if authorization.nil?
@@ -134,10 +168,12 @@ module OAuthenticator
       end
     end
 
+    # hash of header params. keys should be a subset of OAUTH_ATTRIBUTE_KEYS.
     def oauth_header_params
       @oauth_header_params ||= SimpleOAuth::Header.parse(authorization)
     end
 
+    # reads the request body, be it String or IO 
     def read_body
       if body.is_a?(String)
         body
@@ -151,6 +187,7 @@ module OAuthenticator
       end
     end
 
+    # SimpleOAuth::Header for this request
     def simple_oauth_header
       params = media_type == "application/x-www-form-urlencoded" ? CGI.parse(read_body).map{|k,vs| vs.map{|v| [k,v] } }.inject([], &:+) : nil
       simple_oauth_header = SimpleOAuth::Header.new(request_method, url, params, authorization)
@@ -160,6 +197,7 @@ module OAuthenticator
     include ConfigMethods
 
     private
+    # raise a nice error message for a method that needs to be implemented on a module of config methods 
     def config_method_not_implemented
       caller_name = caller[0].match(%r(in `(.*?)'))[1]
       using_middleware = caller.any? { |l| l =~ %r(oauthenticator/middleware.rb:.*`call') }
