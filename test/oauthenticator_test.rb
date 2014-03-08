@@ -2,6 +2,9 @@
 
 require 'simplecov'
 
+require 'debugger'
+Debugger.start
+
 # NO EXPECTATIONS 
 ENV["MT_NO_EXPECTATIONS"]
 
