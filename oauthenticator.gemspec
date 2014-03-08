@@ -14,6 +14,9 @@ Gem::Specification.new do |spec|
   spec.license       = 'MIT'
 
   spec.files         = [
+    '.yardopts',
+    'LICENSE.txt',
+    'README.md',
     'lib/oauthenticator.rb',
     'lib/oauthenticator/middleware.rb',
     'lib/oauthenticator/config_methods.rb',
