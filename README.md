@@ -37,12 +37,12 @@ require 'oauthenticator'
 module AwesomeOAuthConfig
   # check for an existing nonce, coupled with the timestamp 
   def nonce_used?
-    OAuthNonces.where(:nonce => nonce, :timestamp => timestamp).any?
+    OAuthNonce.where(:nonce => nonce, :timestamp => timestamp).any?
   end
 
   # nonce is used, store it so that in the future #nonce_used? will return true correctly 
   def use_nonce!
-    OAuthNonces.create!(:nonce => nonce, :timestamp => timestamp)
+    OAuthNonce.create!(:nonce => nonce, :timestamp => timestamp)
   end
 
   # number seconds in the past and the future for which we'll consider a request authentic 
