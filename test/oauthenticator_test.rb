@@ -167,6 +167,21 @@ describe OAuthenticator::Middleware do
     assert_response(401, /Authorization scheme is not OAuth/, *oapp.call({'HTTP_AUTHORIZATION' => 'Authorization: Basic QWxhZGRpbjpvcGVuIHNlc2FtZQ=='}))
   end
 
+  describe 'invalid Authorization header' do
+    if SimpleOAuth.const_defined?(:ParseError)
+      it 'does not prefix with oauth_' do
+        assert_response(401, /Could not parse Authorization header/, *oapp.call({'HTTP_AUTHORIZATION' => %q(OAuth client_app_key="test_client_app_key")}))
+      end
+      it 'has something unparseable' do
+        assert_response(401, /Could not parse Authorization header/, *oapp.call({'HTTP_AUTHORIZATION' => %q(OAuth <client-app-key>test_client_app_key</client-app-key>)}))
+      end
+    else
+      it 'has something unparseable' do
+        assert_response(401, /Authorization header is not a properly-formed OAuth 1.0 header./, *oapp.call({'HTTP_AUTHORIZATION' => %q(OAuth <client-app-key>test_client_app_key</client-app-key>)}))
+      end
+    end
+  end
+
   it 'omits timestamp' do
     Timecop.travel Time.at 1391021695
     consumer # cause this to be created
