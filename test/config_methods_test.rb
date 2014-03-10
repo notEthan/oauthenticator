@@ -23,6 +23,11 @@ describe OAuthenticator::SignedRequest do
     end
     assert_match /passed to OAuthenticator::Middleware using the option :config_methods./, exc.message
   end
+  it "complains middleware is not given config methods" do
+    assert_raises(ArgumentError) do
+      OAuthenticator::Middleware.new(proc {})
+    end
+  end
   it 'uses timestamp_valid_period if that is implemented but timestamp_valid_past or timestamp_valid_future is not' do
     called = 0
     mod = Module.new { define_method(:timestamp_valid_period) { called +=1 } }
