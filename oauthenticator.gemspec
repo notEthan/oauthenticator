@@ -26,7 +26,8 @@ Gem::Specification.new do |spec|
   spec.executables   = []
   spec.test_files    = [
     'test/helper.rb',
-    'test/oauthenticator_test.rb'
+    'test/oauthenticator_test.rb',
+    'test/config_methods_test.rb',
   ]
   spec.require_paths = ['lib']
 
