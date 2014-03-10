@@ -5,9 +5,10 @@ require 'helper'
 describe OAuthenticator::SignedRequest do
   %w(timestamp_valid_period consumer_secret access_token_secret nonce_used? use_nonce! access_token_belongs_to_consumer?).each do |method_without_default|
     it "complains when #{method_without_default} is not implemented" do
-      assert_raises(NotImplementedError) do
+      exc = assert_raises(NotImplementedError) do
         OAuthenticator::SignedRequest.new({}).public_send(method_without_default)
       end
+      assert_match /included in a subclass of OAuthenticator::SignedRequest/, exc.message
     end
     it "uses the method #{method_without_default} when implemented" do
       called = false
@@ -15,6 +16,12 @@ describe OAuthenticator::SignedRequest do
       OAuthenticator::SignedRequest.including_config(mod).new({}).public_send(method_without_default)
       assert called
     end
+  end
+  it "complains when a method without a default is not implemented, using middleware" do
+    exc = assert_raises(NotImplementedError) do
+      OAuthenticator::Middleware.new(proc {}, {:config_methods => Module.new}).call({'HTTP_AUTHORIZATION' => %q(OAuth oauth_timestamp="1")})
+    end
+    assert_match /passed to OAuthenticator::Middleware using the option :config_methods./, exc.message
   end
   it 'uses timestamp_valid_period if that is implemented but timestamp_valid_past or timestamp_valid_future is not' do
     called = 0
