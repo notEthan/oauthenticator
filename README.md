@@ -20,8 +20,8 @@ on its own but will be used in following examples for usage of Middleware and Si
 ```ruby
 require 'oauthenticator'
 
-# we'll suppose that there exist the following ActiveRecord classes with the named attributes (all of which 
-# are strings), for this example:
+# we'll suppose that there exist the following ActiveRecord classes with the named 
+# attributes (all of which are strings), for this example:
 #
 # - OAuthNonce:
 #   - nonce
@@ -40,12 +40,14 @@ module AwesomeOAuthConfig
     OAuthNonce.where(:nonce => nonce, :timestamp => timestamp).any?
   end
 
-  # nonce is used, store it so that in the future #nonce_used? will return true correctly 
+  # nonce is used, store it so that in the future #nonce_used? will return true 
+  # correctly 
   def use_nonce!
     OAuthNonce.create!(:nonce => nonce, :timestamp => timestamp)
   end
 
-  # number seconds in the past and the future for which we'll consider a request authentic 
+  # number seconds in the past and the future for which we'll consider a request 
+  # authentic 
   def timestamp_valid_period
     25
   end
@@ -68,7 +70,8 @@ module AwesomeOAuthConfig
   # whether the access token belongs to the consumer 
   def access_token_belongs_to_consumer?
     AccessToken.where(:token => token).first.try(:consumer_key) == consumer_key
-    # alternately, AccessToken.where(:token => token, :consumer_key => consumer_key).any?
+    # alternately:
+    # AccessToken.where(:token => token, :consumer_key => consumer_key).any?
   end
 end
 ```
@@ -98,7 +101,7 @@ The OAuthenticator::SignedRequest class may be used independently of the middlew
 passed your module of config methods to include. It is used like:
 
 ```ruby
-OAuthenticator::SignedRequest.including_config(AwesomeOAuthConfig).new(request_attributes)
+OAuthenticator::SignedRequest.including_config(AwesomeOAuthConfig).new(request_attrs)
 ```
 
 See the documentation of OAuthenticator::SignedRequest for how the class is used, once it includes the methods 
