@@ -64,14 +64,14 @@ module AwesomeOAuthConfig
 
   # access token secret, looked up by access token 
   def access_token_secret
-    AccessToken.where(:token => token).first.try(:secret)
+    OAuthAccessToken.where(:token => token).first.try(:secret)
   end
 
   # whether the access token belongs to the consumer 
   def access_token_belongs_to_consumer?
-    AccessToken.where(:token => token).first.try(:consumer_key) == consumer_key
+    OAuthAccessToken.where(:token => token).first.try(:consumer_key) == consumer_key
     # alternately:
-    # AccessToken.where(:token => token, :consumer_key => consumer_key).any?
+    # OAuthAccessToken.where(:token => token, :consumer_key => consumer_key).any?
   end
 end
 ```
