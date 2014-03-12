@@ -107,3 +107,15 @@ OAuthenticator::SignedRequest.including_config(AwesomeOAuthConfig).new(request_a
 See the documentation of OAuthenticator::SignedRequest for how the class is used, once it includes the methods 
 it needs to function. 
 
+# Other
+
+## SimpleOAuth
+
+OAuthenticator uses [SimpleOAuth](https://github.com/laserlemon/simple_oauth) underneath. There is a 
+fork with some improvements that have not yet made it into the main SimpleOAuth repo, and it is recommended 
+to use these for more robust and safe parsing of the Authorization header. This is not published in rubygems, 
+but if you use Bundler, you can use this by using the following line in your `Gemfile`;
+
+```ruby
+gem 'simple_oauth', :git => 'https://github.com/notEthan/simple_oauth.git', :tag => 'ethan-v0.2.0.1'
+```
