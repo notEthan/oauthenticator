@@ -11,7 +11,7 @@ implementation up to the user. The user configures this by creating a module imp
 which will be passed to OAuthenticator.
 
 For more information on the details of the methods which must or may be implemented, please see the 
-documentation for the module OAuthenticator::SignedRequest::ConfigMethods, which defines stub methods for 
+documentation for the module `OAuthenticator::ConfigMethods`, which defines stub methods for 
 each recognized method, with method documentation relating to your implementation.
 
 A simple, contrived example follows, which approximately resembles what you might implement. It is not useful 
@@ -82,7 +82,7 @@ tests.
 
 ## OAuthenticator::Middleware
 
-The middleware is used by passing the above-mentioned module on the :config_methods key to  initialize the 
+The middleware is used by passing the above-mentioned module on the `:config_methods` key to  initialize the 
 middleware:
 
 ```ruby
@@ -92,8 +92,8 @@ use OAuthenticator::Middleware, :config_methods => AwesomeOAuthConfig
 run proc { |env| [200, {'Content-Type' => 'text/plain'}, ['access granted!']] }
 ```
 
-The authentication can also be bypassed with a proc on the :bypass key; see the documentation for 
-OAuthenticator::Middleware for the details of that. 
+The authentication can also be bypassed with a proc on the `:bypass` key; see the documentation for 
+`OAuthenticator::Middleware` for the details of that. 
 
 ## OAuthenticator::SignedRequest
 
