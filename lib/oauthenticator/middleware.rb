@@ -35,7 +35,7 @@ module OAuthenticator
 
       if @options[:bypass] && @options[:bypass].call(request)
         env["oauth.authenticated"] = false
-        @app.call(env, request)
+        @app.call(env)
       else
         oauth_signed_request_class = OAuthenticator::SignedRequest.including_config(@options[:config_methods])
         oauth_request = oauth_signed_request_class.from_rack_request(request)
