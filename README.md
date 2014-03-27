@@ -117,5 +117,5 @@ to use these for more robust and safe parsing of the Authorization header. This 
 but if you use Bundler, you can use this by using the following line in your `Gemfile`;
 
 ```ruby
-gem 'simple_oauth', :git => 'https://github.com/notEthan/simple_oauth.git', :tag => 'ethan-v0.2.0.1'
+gem 'simple_oauth', :git => 'https://github.com/notEthan/simple_oauth.git', :tag => 'ethan-v0.2.0.2'
 ```
