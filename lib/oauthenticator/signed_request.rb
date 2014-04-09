@@ -35,8 +35,14 @@ module OAuthenticator
     # readers for oauth header parameters 
     OAUTH_ATTRIBUTE_KEYS.each { |key| define_method(key) { oauth_header_params[key] } }
 
-    # question methods to indicate whether oauth header parameters were included in the Authorization 
-    OAUTH_ATTRIBUTE_KEYS.each { |key| define_method("#{key}?") { oauth_header_params.key?(key) } }
+    # question methods to indicate whether oauth header parameters were included with a non-blank value in 
+    # the Authorization header
+    OAUTH_ATTRIBUTE_KEYS.each do |key|
+      define_method("#{key}?") do
+        value = oauth_header_params[key]
+        value.is_a?(String) ? !value.empty? : !!value
+      end
+    end
 
     VALID_SIGNATURE_METHODS = %w(HMAC-SHA1 RSA-SHA1 PLAINTEXT).map(&:freeze).freeze
 
