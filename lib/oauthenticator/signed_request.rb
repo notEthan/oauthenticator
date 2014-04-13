@@ -209,7 +209,8 @@ module OAuthenticator
           body.rewind
         end
       else
-        raise NotImplementedError, "body = #{body.inspect}"
+        raise ArgumentError, "Body must be a String or something IO-like (responding to #read and #rewind). " +
+          "got body = #{body.inspect}"
       end
     end
 
