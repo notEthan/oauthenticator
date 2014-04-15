@@ -184,9 +184,6 @@ describe OAuthenticator::Middleware do
 
   describe 'invalid Authorization header' do
     if SimpleOAuth.const_defined?(:ParseError)
-      it 'does not prefix with oauth_' do
-        assert_response(401, /Could not parse Authorization header/, *oapp.call({'HTTP_AUTHORIZATION' => %q(OAuth client_app_key="test_client_app_key")}))
-      end
       it 'has something unparseable' do
         assert_response(401, /Could not parse Authorization header/, *oapp.call({'HTTP_AUTHORIZATION' => %q(OAuth <client-app-key>test_client_app_key</client-app-key>)}))
       end
