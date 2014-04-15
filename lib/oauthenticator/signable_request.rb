@@ -74,6 +74,7 @@ module OAuthenticator
 
       # validation - presence
       required = %w(request_method uri media_type body)
+      required += %w(signature_method consumer_key) unless @attributes['authorization']
       missing = required - @attributes.keys
       raise ArgumentError, "missing: #{missing.inspect}" if missing.any?
       extra = @attributes.keys - (required + PROTOCOL_PARAM_KEYS + %w(authorization consumer_secret token_secret))
