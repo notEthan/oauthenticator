@@ -112,6 +112,15 @@ module OAuthenticator
       rbmethod.bind(self).call
     end
 
+    # section 3.4.1.3 
+    def protocol_params
+      @attributes['authorization'].reject { |k,v| %w(realm oauth_signature).include?(k) }
+    end
+
+    def signed_protocol_params
+      protocol_params.merge('oauth_signature' => signature)
+    end
+
     private
 
     # signature base string for signing. section 3.4.1
@@ -138,7 +147,7 @@ module OAuthenticator
 
     # section 3.4.1.3
     def normalized_request_params
-      query_params + protocol_params + entity_params
+      query_params + protocol_params.to_a + entity_params
     end
 
     # section 3.4.1.3.1
@@ -153,15 +162,6 @@ module OAuthenticator
       else
         []
       end
-    end
-
-    # section 3.4.1.3 
-    def protocol_params
-      @attributes['authorization'].reject { |k,v| %w(realm oauth_signature).include?(k) }.to_a
-    end
-
-    def signed_protocol_params
-      protocol_params + [['oauth_signature', signature]]
     end
 
     # string of protocol params including signature, sorted 
