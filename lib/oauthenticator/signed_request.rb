@@ -1,4 +1,4 @@
-require 'simple_oauth'
+require 'oauthenticator/signable_request'
 
 module OAuthenticator
   # this class represents an OAuth signed request. its primary user-facing method is {#errors}, which returns 
@@ -33,13 +33,13 @@ module OAuthenticator
     ATTRIBUTE_KEYS.each { |attribute_key| define_method(attribute_key) { @attributes[attribute_key] } }
 
     # readers for oauth header parameters 
-    OAUTH_ATTRIBUTE_KEYS.each { |key| define_method(key) { oauth_header_params[key] } }
+    OAUTH_ATTRIBUTE_KEYS.each { |key| define_method(key) { oauth_header_params["oauth_#{key}"] } }
 
     # question methods to indicate whether oauth header parameters were included with a non-blank value in 
     # the Authorization header
     OAUTH_ATTRIBUTE_KEYS.each do |key|
       define_method("#{key}?") do
-        value = oauth_header_params[key]
+        value = oauth_header_params["oauth_#{key}"]
         value.is_a?(String) ? !value.empty? : !!value
       end
     end
@@ -92,22 +92,14 @@ module OAuthenticator
           {'Authorization' => ["Authorization header is missing"]}
         elsif authorization !~ /\S/
           {'Authorization' => ["Authorization header is blank"]}
-        elsif authorization !~ /\Aoauth\s/i
-          {'Authorization' => ["Authorization scheme is not OAuth; received Authorization: #{authorization}"]}
         else
-          to_rescue = SimpleOAuth.const_defined?(:ParseError) ? SimpleOAuth::ParseError : StandardError
           begin
             oauth_header_params
-          rescue to_rescue
+          rescue OAuthenticator::Error
             parse_exception = $!
           end
           if parse_exception
-            if parse_exception.class.name == 'SimpleOAuth::ParseError'
-              message = parse_exception.message
-            else
-              message = "Authorization header is not a properly-formed OAuth 1.0 header."
-            end
-            {'Authorization' => [message]}
+            parse_exception.errors
           else
             errors = Hash.new { |h,k| h[k] = [] }
 
@@ -177,7 +169,8 @@ module OAuthenticator
               errors
             else
               # proceed to check signature
-              if !simple_oauth_header.valid?(secrets)
+              signable_request = SignableRequest.new(@attributes.merge(secrets))
+              unless self.signature == signable_request.signature
                 {'Authorization oauth_signature' => ['is invalid']}
               else
                 use_nonce!
@@ -196,28 +189,7 @@ module OAuthenticator
 
     # hash of header params. keys should be a subset of OAUTH_ATTRIBUTE_KEYS.
     def oauth_header_params
-      @oauth_header_params ||= SimpleOAuth::Header.parse(authorization)
-    end
-
-    # reads the request body, be it String or IO 
-    def read_body
-      if body.is_a?(String)
-        body
-      elsif body.respond_to?(:read) && body.respond_to?(:rewind)
-        body.rewind
-        body.read.tap do
-          body.rewind
-        end
-      else
-        raise ArgumentError, "Body must be a String or something IO-like (responding to #read and #rewind). " +
-          "got body = #{body.inspect}"
-      end
-    end
-
-    # SimpleOAuth::Header for this request
-    def simple_oauth_header
-      params = media_type == "application/x-www-form-urlencoded" ? CGI.parse(read_body).map{|k,vs| vs.map{|v| [k,v] } }.inject([], &:+) : nil
-      simple_oauth_header = SimpleOAuth::Header.new(request_method, uri, params, authorization)
+      @oauth_header_params ||= OAuthenticator.parse_authorization(authorization)
     end
 
     # raise a nice error message for a method that needs to be implemented on a module of config methods 

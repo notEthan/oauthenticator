@@ -1,5 +1,4 @@
 require 'rack'
-require 'simple_oauth'
 require 'json'
 require 'oauthenticator/signed_request'
 

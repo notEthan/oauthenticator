@@ -1,6 +1,7 @@
 # encoding: utf-8
 proc { |p| $:.unshift(p) unless $:.any? { |lp| File.expand_path(lp) == p } }.call(File.expand_path('.', File.dirname(__FILE__)))
 require 'helper'
+require 'simple_oauth'
 
 # config methods for testing OAuthenticator. simple 
 module OAuthenticatorTestConfigMethods
@@ -183,14 +184,8 @@ describe OAuthenticator::Middleware do
   end
 
   describe 'invalid Authorization header' do
-    if SimpleOAuth.const_defined?(:ParseError)
-      it 'has something unparseable' do
-        assert_response(401, /Could not parse Authorization header/, *oapp.call({'HTTP_AUTHORIZATION' => %q(OAuth <client-app-key>test_client_app_key</client-app-key>)}))
-      end
-    else
-      it 'has something unparseable' do
-        assert_response(401, /Authorization header is not a properly-formed OAuth 1.0 header./, *oapp.call({'HTTP_AUTHORIZATION' => %q(OAuth <client-app-key>test_client_app_key</client-app-key>)}))
-      end
+    it 'has something unparseable' do
+      assert_response(401, /Could not parse Authorization header/, *oapp.call({'HTTP_AUTHORIZATION' => %q(OAuth <client-app-key>test_client_app_key</client-app-key>)}))
     end
   end
 
