@@ -16,11 +16,11 @@ module OAuthenticatorTestConfigMethods
   end
 
   def nonce_used?
-    OAuthenticatorTestConfigMethods.nonces.include?(oauth_header_params[:nonce])
+    OAuthenticatorTestConfigMethods.nonces.include?(nonce)
   end
 
   def use_nonce!
-    OAuthenticatorTestConfigMethods.nonces << oauth_header_params[:nonce]
+    OAuthenticatorTestConfigMethods.nonces << nonce
   end
 
   def timestamp_valid_period
@@ -32,15 +32,15 @@ module OAuthenticatorTestConfigMethods
   end
 
   def consumer_secret
-    OAuthenticatorTestConfigMethods.consumer_secrets[oauth_header_params[:consumer_key]]
+    OAuthenticatorTestConfigMethods.consumer_secrets[consumer_key]
   end
 
   def access_token_secret
-    OAuthenticatorTestConfigMethods.access_token_secrets[oauth_header_params[:token]]
+    OAuthenticatorTestConfigMethods.access_token_secrets[token]
   end
 
   def access_token_belongs_to_consumer?
-    OAuthenticatorTestConfigMethods.access_token_consumers[oauth_header_params[:token]] == oauth_header_params[:consumer_key]
+    OAuthenticatorTestConfigMethods.access_token_consumers[token] == consumer_key
   end
 end
 
