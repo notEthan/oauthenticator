@@ -114,6 +114,9 @@ module OAuthenticator
     # whether the access token indicated by the request (via `#token`) belongs to the consumer indicated by 
     # the request (via `#consumer_key`). 
     #
+    # this method may simply return true if the implementation does not care to restrict access tokens by 
+    # consumer. 
+    #
     # @return [Boolean] whether the request's access token belongs to the request's consumer 
     def access_token_belongs_to_consumer?
       config_method_not_implemented
