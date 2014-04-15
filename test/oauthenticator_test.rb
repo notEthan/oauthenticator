@@ -184,6 +184,14 @@ describe OAuthenticator::Middleware do
   end
 
   describe 'invalid Authorization header' do
+    it 'has duplicate params' do
+      assert_response(
+        401,
+        /Received multiple instances of Authorization parameter oauth_version/,
+        *oapp.call({'HTTP_AUTHORIZATION' => %q(OAuth oauth_version="1.0", oauth_version="1.1")})
+      )
+    end
+
     it 'has something unparseable' do
       assert_response(401, /Could not parse Authorization header/, *oapp.call({'HTTP_AUTHORIZATION' => %q(OAuth <client-app-key>test_client_app_key</client-app-key>)}))
     end
