@@ -26,7 +26,7 @@ module OAuthenticator
       end
     end
 
-    ATTRIBUTE_KEYS = %w(request_method url body media_type authorization).map(&:freeze).freeze
+    ATTRIBUTE_KEYS = %w(request_method uri body media_type authorization).map(&:freeze).freeze
     OAUTH_ATTRIBUTE_KEYS = %w(consumer_key token timestamp nonce version signature_method signature).map(&:to_sym).freeze
 
     # readers 
@@ -57,7 +57,7 @@ module OAuthenticator
       def from_rack_request(request)
         new({
           :request_method => request.request_method,
-          :url => request.url,
+          :uri => request.url,
           :body => request.body,
           :media_type => request.media_type,
           :authorization => request.env['HTTP_AUTHORIZATION'],
@@ -217,7 +217,7 @@ module OAuthenticator
     # SimpleOAuth::Header for this request
     def simple_oauth_header
       params = media_type == "application/x-www-form-urlencoded" ? CGI.parse(read_body).map{|k,vs| vs.map{|v| [k,v] } }.inject([], &:+) : nil
-      simple_oauth_header = SimpleOAuth::Header.new(request_method, url, params, authorization)
+      simple_oauth_header = SimpleOAuth::Header.new(request_method, uri, params, authorization)
     end
 
     # raise a nice error message for a method that needs to be implemented on a module of config methods 
