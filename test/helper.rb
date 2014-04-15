@@ -2,8 +2,7 @@ proc { |p| $:.unshift(p) unless $:.any? { |lp| File.expand_path(lp) == p } }.cal
 
 require 'simplecov'
 
-require 'debugger'
-Debugger.start
+require 'byebug'
 
 # NO EXPECTATIONS 
 ENV["MT_NO_EXPECTATIONS"]
