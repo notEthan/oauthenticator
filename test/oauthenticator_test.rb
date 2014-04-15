@@ -51,8 +51,6 @@ describe OAuthenticator::Middleware do
     [:nonces, :consumer_secrets, :access_token_secrets, :access_token_consumers].each do |db|
       OAuthenticatorTestConfigMethods.send(db).clear
     end
-
-    Timecop.return
   end
 
   let(:simpleapp) { proc { |env| [200, {}, ['☺']] } }

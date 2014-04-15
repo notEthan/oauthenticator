@@ -15,3 +15,12 @@ require 'rack/test'
 require 'timecop'
 
 require 'oauthenticator'
+
+class OAuthenticatorConfigSpec < Minitest::Spec
+  after do
+    Timecop.return
+  end
+end
+
+# register this to be the base class for specs instead of Minitest::Spec
+Minitest::Spec.register_spec_type(//, OAuthenticatorConfigSpec)
