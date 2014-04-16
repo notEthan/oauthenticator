@@ -152,11 +152,22 @@ module OAuthenticator
     end
 
     # section 3.4.1.3.1
+    #
+    # parsed query params, extracted from the request URI. since keys may appear multiple times, represented 
+    # as an array of two-element arrays and not a hash
+    #
+    # @return [Array<Array<String>>] 
     def query_params
       parse_form_encoded(URI.parse(@attributes['uri'].to_s).query || '')
     end
 
     # section 3.4.1.3.1
+    #
+    # parsed entity params from the body, when the request is form encoded. since keys may appear multiple 
+    # times, represented as an array of two-element arrays and not a hash
+    #
+    # @return [Array<Array<String>>] since keys may appear multiple times, represented as an array of 
+    # two-element arrays and not a hash
     def entity_params
       if @attributes['media_type'] == "application/x-www-form-urlencoded"
         parse_form_encoded(read_body)
