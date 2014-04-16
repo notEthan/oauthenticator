@@ -1,4 +1,5 @@
 require 'oauthenticator/signable_request'
+require 'oauthenticator/parse_authorization'
 
 module OAuthenticator
   # this class represents an OAuth signed request. its primary user-facing method is {#errors}, which returns 
