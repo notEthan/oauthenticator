@@ -100,4 +100,15 @@ describe OAuthenticator::SignableRequest do
       assert authorization.include?(%q(consumer_key="%20%21%23%24%25%26%27%28%29%2A%2B%2C-.%2F0123456789%3A%3B%3C%3D%3E%3F%40ABCDEFGHIJKLMNOPQRSTUVWXYZ%5B%5D%5E_%60abcdefghijklmnopqrstuvwxyz%7B%7C%7D~%C4%80"))
     end
   end
+
+  it 'includes unrecognized authorization params when calculating signature base' do
+    authorization = %q(OAuth realm="Example",
+      oauth_foo="bar",
+      oauth_consumer_key="9djdj82h48djs9d2",
+      oauth_signature_method="HMAC-SHA1",
+      oauth_timestamp="137131201",
+      oauth_nonce="7d8f3e4a"
+    )
+    assert example_request(:authorization => authorization).send(:signature_base).include?("oauth_foo%3Dbar")
+  end
 end
