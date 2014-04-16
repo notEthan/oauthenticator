@@ -107,7 +107,6 @@ module OAuthenticator
     end
 
     def signature
-      signature_method = @attributes['authorization']['oauth_signature_method']
       rbmethod = SIGNATURE_METHODS[signature_method] ||
         raise(ArgumentError, "invalid signature method: #{signature_method}")
       rbmethod.bind(self).call
@@ -169,7 +168,7 @@ module OAuthenticator
     # @return [Array<Array<String>>] since keys may appear multiple times, represented as an array of 
     # two-element arrays and not a hash
     def entity_params
-      if @attributes['media_type'] == "application/x-www-form-urlencoded"
+      if form_encoded?
         parse_form_encoded(read_body)
       else
         []
@@ -203,6 +202,14 @@ module OAuthenticator
         raise TypeError, "Body must be a String or something IO-like (responding to #read and #rewind). " +
           "got body = #{body.inspect}"
       end
+    end
+
+    def signature_method
+      @attributes['authorization']['oauth_signature_method']
+    end
+
+    def form_encoded?
+      @attributes['media_type'] == "application/x-www-form-urlencoded"
     end
 
     def rsa_sha1_signature
