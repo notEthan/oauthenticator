@@ -125,7 +125,7 @@ module OAuthenticator
 
     # signature base string for signing. section 3.4.1
     def signature_base
-      parts = [@attributes['request_method'].to_s.upcase, base_string_uri, normalized_request_params_string]
+      parts = [normalized_request_method, base_string_uri, normalized_request_params_string]
       parts.map { |v| OAuthenticator.escape(v) }.join('&')
     end
 
@@ -138,6 +138,11 @@ module OAuthenticator
         uri.fragment = nil
         uri.query = nil
       end.to_s
+    end
+
+    # section 3.4.1.1
+    def normalized_request_method
+      @attributes['request_method'].to_s.upcase
     end
 
     # section 3.4.1.3.2
