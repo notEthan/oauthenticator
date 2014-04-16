@@ -77,7 +77,7 @@ module OAuthenticator
       required += %w(signature_method consumer_key) unless @attributes['authorization']
       missing = required - @attributes.keys
       raise ArgumentError, "missing: #{missing.inspect}" if missing.any?
-      extra = @attributes.keys - (required + PROTOCOL_PARAM_KEYS + %w(authorization consumer_secret token_secret))
+      extra = @attributes.keys - (required + PROTOCOL_PARAM_KEYS + %w(authorization consumer_secret token_secret realm))
       raise ArgumentError, "received unrecognized @attributes: #{extra.inspect}" if extra.any?
 
       if @attributes['authorization']
@@ -98,6 +98,7 @@ module OAuthenticator
         @attributes['authorization'] = PROTOCOL_PARAM_KEYS.map do |key|
           {"oauth_#{key}" => @attributes.key?(key) ? @attributes[key] : defaults[key]}
         end.inject({}, &:update).reject {|k,v| v.nil? }
+        @attributes['authorization']['realm'] = @attributes['realm'] unless @attributes['realm'].nil?
       end
     end
 
@@ -114,7 +115,7 @@ module OAuthenticator
 
     # section 3.4.1.3 
     def protocol_params
-      @attributes['authorization'].reject { |k,v| %w(realm oauth_signature).include?(k) }
+      @attributes['authorization']
     end
 
     def signed_protocol_params
@@ -147,7 +148,7 @@ module OAuthenticator
 
     # section 3.4.1.3
     def normalized_request_params
-      query_params + protocol_params.to_a + entity_params
+      query_params + protocol_params.reject { |k,v| %w(realm oauth_signature).include?(k) }.to_a + entity_params
     end
 
     # section 3.4.1.3.1
