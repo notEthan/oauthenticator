@@ -101,6 +101,35 @@ describe OAuthenticator::SignableRequest do
     end
   end
 
+  describe 'uri, per section 3.4.1.2' do
+    it 'lowercases scheme and host' do
+      [
+        'http://example.com/FooBar',
+        'Http://Example.com/FooBar',
+        'HTTP://EXAMPLE.cOM/FooBar',
+      ].each do |uri|
+        assert_equal('http://example.com/FooBar', example_request(:uri => uri).send(:base_string_uri))
+      end
+    end
+
+    it 'normalizes port' do
+      assert_equal('http://example.com/F', example_request(:uri => 'http://example.com/F').send(:base_string_uri))
+      assert_equal('http://example.com/F', example_request(:uri => 'http://example.com:80/F').send(:base_string_uri))
+      assert_equal('http://example.com:81/F', example_request(:uri => 'http://example.com:81/F').send(:base_string_uri))
+      assert_equal('https://example.com/F', example_request(:uri => 'https://example.com/F').send(:base_string_uri))
+      assert_equal('https://example.com/F', example_request(:uri => 'https://example.com:443/F').send(:base_string_uri))
+      assert_equal('https://example.com:444/F', example_request(:uri => 'https://example.com:444/F').send(:base_string_uri))
+    end
+  end
+
+  it 'accepts string or symbol request methods' do
+    {'GET' => [:get, :Get, :GET, 'GeT', 'get'], 'OPTIONS' => [:options, 'Options']}.each do |norm, variants|
+      variants.each do |request_method|
+        assert_equal(norm, example_request(:request_method => request_method).send(:normalized_request_method))
+      end
+    end
+  end
+
   it 'includes unrecognized authorization params when calculating signature base' do
     authorization = %q(OAuth realm="Example",
       oauth_foo="bar",
@@ -110,5 +139,71 @@ describe OAuthenticator::SignableRequest do
       oauth_nonce="7d8f3e4a"
     )
     assert example_request(:authorization => authorization).send(:signature_base).include?("oauth_foo%3Dbar")
+  end
+
+  it 'reproduces a successful OAuth example GET (lifted from simple oauth)' do
+    request = OAuthenticator::SignableRequest.new(
+      :request_method => :get,
+      :uri => 'http://photos.example.net/photos',
+      :media_type => 'application/x-www-form-urlencoded',
+      :body => 'file=vacaction.jpg&size=original',
+      :consumer_key => 'dpf43f3p2l4k3l03',
+      :consumer_secret => "-----BEGIN PRIVATE KEY-----
+MIICdgIBADANBgkqhkiG9w0BAQEFAASCAmAwggJcAgEAAoGBALRiMLAh9iimur8V
+A7qVvdqxevEuUkW4K+2KdMXmnQbG9Aa7k7eBjK1S+0LYmVjPKlJGNXHDGuy5Fw/d
+7rjVJ0BLB+ubPK8iA/Tw3hLQgXMRRGRXXCn8ikfuQfjUS1uZSatdLB81mydBETlJ
+hI6GH4twrbDJCR2Bwy/XWXgqgGRzAgMBAAECgYBYWVtleUzavkbrPjy0T5FMou8H
+X9u2AC2ry8vD/l7cqedtwMPp9k7TubgNFo+NGvKsl2ynyprOZR1xjQ7WgrgVB+mm
+uScOM/5HVceFuGRDhYTCObE+y1kxRloNYXnx3ei1zbeYLPCHdhxRYW7T0qcynNmw
+rn05/KO2RLjgQNalsQJBANeA3Q4Nugqy4QBUCEC09SqylT2K9FrrItqL2QKc9v0Z
+zO2uwllCbg0dwpVuYPYXYvikNHHg+aCWF+VXsb9rpPsCQQDWR9TT4ORdzoj+Nccn
+qkMsDmzt0EfNaAOwHOmVJ2RVBspPcxt5iN4HI7HNeG6U5YsFBb+/GZbgfBT3kpNG
+WPTpAkBI+gFhjfJvRw38n3g/+UeAkwMI2TJQS4n8+hid0uus3/zOjDySH3XHCUno
+cn1xOJAyZODBo47E+67R4jV1/gzbAkEAklJaspRPXP877NssM5nAZMU0/O/NGCZ+
+3jPgDUno6WbJn5cqm8MqWhW1xGkImgRk+fkDBquiq4gPiT898jusgQJAd5Zrr6Q8
+AO/0isr/3aa6O6NLQxISLKcPDk2NOccAfS/xOtfOz4sJYM3+Bs4Io9+dZGSDCA54
+Lw03eHTNQghS0A==
+-----END PRIVATE KEY-----",
+      :nonce => '13917289812797014437',
+      :signature_method => 'RSA-SHA1',
+      :timestamp => '1196666512'
+    )
+    expected_protocol_params = {
+      "oauth_consumer_key" => "dpf43f3p2l4k3l03",
+      "oauth_nonce" => "13917289812797014437",
+      "oauth_signature" => "jvTp/wX1TYtByB1m+Pbyo0lnCOLIsyGCH7wke8AUs3BpnwZJtAuEJkvQL2/9n4s5wUmUl4aCI4BwpraNx4RtEXMe5qg5T1LVTGliMRpKasKsW//e+RinhejgCuzoH26dyF8iY2ZZ/5D1ilgeijhV/vBka5twt399mXwaYdCwFYE=",
+      "oauth_signature_method" => "RSA-SHA1",
+      "oauth_timestamp" => "1196666512",
+      "oauth_version" => "1.0",
+    }
+
+    assert_equal(expected_protocol_params, request.signed_protocol_params)
+  end
+
+  it 'reproduces a successful OAuth example GET (lifted from simple oauth)' do
+    request = OAuthenticator::SignableRequest.new(
+      :request_method => :get,
+      :uri => 'http://host.net/resource?name=value',
+      :media_type => 'application/x-www-form-urlencoded',
+      :body => 'name=value',
+      :consumer_key => 'abcd',
+      :consumer_secret => 'efgh',
+      :token => 'ijkl',
+      :token_secret => 'mnop',
+      :nonce => 'oLKtec51GQy',
+      :signature_method => 'PLAINTEXT',
+      :timestamp => '1286977095'
+    )
+    expected_protocol_params = {
+      "oauth_consumer_key" => "abcd",
+      "oauth_nonce" => "oLKtec51GQy",
+      "oauth_signature" => "efgh&mnop",
+      "oauth_signature_method" => "PLAINTEXT",
+      "oauth_timestamp" => "1286977095",
+      "oauth_token" => "ijkl",
+      "oauth_version" => "1.0"
+    }
+
+    assert_equal(expected_protocol_params, request.signed_protocol_params)
   end
 end
