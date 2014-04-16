@@ -153,16 +153,24 @@ module OAuthenticator
 
     # section 3.4.1.3.1
     def query_params
-      CGI.parse(URI.parse(@attributes['uri'].to_s).query || '').map{|k,vs| vs.map{|v| [k,v] } }.inject([], &:+)
+      parse_form_encoded(URI.parse(@attributes['uri'].to_s).query || '')
     end
 
     # section 3.4.1.3.1
     def entity_params
       if @attributes['media_type'] == "application/x-www-form-urlencoded"
-        CGI.parse(read_body).map{|k,vs| vs.map{|v| [k,v] } }.inject([], &:+)
+        parse_form_encoded(read_body)
       else
         []
       end
+    end
+
+    # like CGI.parse but it keeps keys without any value. doesn't keep blank keys though.
+    def parse_form_encoded(data)
+      data.split(/[&;]/).map do |pair|
+        key, value = pair.split('=', 2).map { |v| CGI::unescape(v) }
+        [key, value] unless [nil, ''].include?(key)
+      end.compact
     end
 
     # string of protocol params including signature, sorted 
