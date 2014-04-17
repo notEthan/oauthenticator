@@ -7,8 +7,38 @@ require 'oauthenticator/parse_authorization'
 
 module OAuthenticator
   class SignableRequest
+    # keys of OAuth protocol parameters which form the Authorization header (with an oauth_ prefix). 
+    # signature is considered separately.
     PROTOCOL_PARAM_KEYS = %w(consumer_key token signature_method timestamp nonce version).map(&:freeze).freeze
 
+    # initialize a signable request with the following attributes (keys may be string or symbol):
+    # - request_method (required) - get, post, etc. may be string or symbol.
+    # - uri (required) - request URI. to_s is called so URI or Addressable::URI or whatever may be passed.
+    # - media_type (required) - the request media type. note that this may be different than the Content-Type 
+    #   header; other components of that such as encoding must not be included.
+    # - body (required) - the request body. may be a String or an IO.
+    # - signature_method (required*) - oauth signature method (String)
+    # - consumer_key (required*) - oauth consumer key (String)
+    # - consumer_secret (required*) - oauth consumer secret (String)
+    # - token (optional*) - oauth token; may be omitted if only using a consumer key (two-legged)
+    # - token_secret (optional) - must be present if token is present. must be omitted if token is omitted.
+    # - timestamp (optional*) - if omitted, defaults to the current time. 
+    #   if nil is passed, no oauth_timestamp will be present in the generated authorization.
+    # - nonce (optional*) - if omitted, defaults to a random string. 
+    #   if nil is passed, no oauth_nonce will be present in the generated authorization.
+    # - version (optional*) - must be nil or '1.0'. defaults to '1.0' if omitted. 
+    #   if nil is passed, no oauth_version will be present in the generated authorization.
+    # - realm (optional) - authorization realm. 
+    #   if nil is passed, no realm will be present in the generated authorization.
+    # - authorization - a hash of a received Authorization header, the result of a call to 
+    #   OAuthenticator.parse_authorization. it is useful for calculating the signature of a received request, 
+    #   but for fully authenticating a received request it is generally preferable to use 
+    #   OAuthenticator::SignedRequest. specifying this precludes the requirement to specify any of 
+    #   PROTOCOL_PARAM_KEYS.
+    #
+    # (*) attributes which are in PROTOCOL_PARAM_KEYS are unused (and not required) when the 
+    # 'authorization' attribute is given for signature verification. normally, though, they are used and 
+    # are required or optional as noted.
     def initialize(attributes)
       raise TypeError, "attributes must be a hash" unless attributes.is_a?(Hash)
       # stringify symbol keys
@@ -49,21 +79,31 @@ module OAuthenticator
       end
     end
 
+    # returns the Authorization header generated for this request.
     def authorization
       "OAuth #{normalized_protocol_params_string}"
     end
 
+    # the oauth_signature calculated for this request.
     def signature
       rbmethod = SIGNATURE_METHODS[signature_method] ||
         raise(ArgumentError, "invalid signature method: #{signature_method}")
       rbmethod.bind(self).call
     end
 
-    # section 3.4.1.3 
+    # protocol params for this request as described in section 3.4.1.3 
+    #
+    # signature is not calculated for this - use #signed_protocol_params to get protocol params including a 
+    # signature. 
+    #
+    # note that if this is a previously-signed request, the oauth_signature attribute returned is the 
+    # received value, NOT the value calculated by us.
     def protocol_params
       @attributes['authorization']
     end
 
+    # protocol params for this request as described in section 3.4.1.3, including our calculated 
+    # oauth_signature.
     def signed_protocol_params
       protocol_params.merge('oauth_signature' => signature)
     end
