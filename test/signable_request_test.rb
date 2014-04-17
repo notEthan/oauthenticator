@@ -138,7 +138,13 @@ describe OAuthenticator::SignableRequest do
       oauth_timestamp="137131201",
       oauth_nonce="7d8f3e4a"
     )
-    assert example_request(:authorization => authorization).send(:signature_base).include?("oauth_foo%3Dbar")
+    assert OAuthenticator::SignableRequest.new(
+      :request_method => 'get',
+      :uri => 'http://example.com',
+      :media_type => 'text/plain',
+      :body => 'hi there',
+      :authorization => OAuthenticator.parse_authorization(authorization)
+    ).send(:signature_base).include?("oauth_foo%3Dbar")
   end
 
   it 'reproduces a successful OAuth example GET (lifted from simple oauth)' do
