@@ -27,8 +27,11 @@ module OAuthenticator
       end
     end
 
+    # attributes of a SignedRequest
     ATTRIBUTE_KEYS = %w(request_method uri body media_type authorization).map(&:freeze).freeze
-    OAUTH_ATTRIBUTE_KEYS = %w(consumer_key token timestamp nonce version signature_method signature).map(&:to_sym).freeze
+
+    # oauth attributes parsed from the request authorization
+    OAUTH_ATTRIBUTE_KEYS = (SignableRequest::PROTOCOL_PARAM_KEYS + %w(signature)).freeze
 
     # readers 
     ATTRIBUTE_KEYS.each { |attribute_key| define_method(attribute_key) { @attributes[attribute_key] } }
@@ -44,8 +47,6 @@ module OAuthenticator
         value.is_a?(String) ? !value.empty? : !!value
       end
     end
-
-    VALID_SIGNATURE_METHODS = %w(HMAC-SHA1 RSA-SHA1 PLAINTEXT).map(&:freeze).freeze
 
     class << self
       # instantiates a `OAuthenticator::SignedRequest` (subclass thereof, more precisely) representing a 

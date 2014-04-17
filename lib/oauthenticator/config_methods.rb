@@ -72,7 +72,7 @@ module OAuthenticator
     #
     # @return [Array<String>]
     def allowed_signature_methods
-      OAuthenticator::SignedRequest::VALID_SIGNATURE_METHODS
+      SignableRequest::SIGNATURE_METHODS.keys
     end
 
     # this should look up the consumer secret in your application's storage corresponding to the request's 

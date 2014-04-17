@@ -36,6 +36,6 @@ describe OAuthenticator::SignedRequest do
     assert_equal 2, called
   end
   it 'uses the default value for allowed signature methods' do
-    assert_equal OAuthenticator::SignedRequest::VALID_SIGNATURE_METHODS, OAuthenticator::SignedRequest.new({}).allowed_signature_methods
+    assert_equal %w(RSA-SHA1 HMAC-SHA1 PLAINTEXT), OAuthenticator::SignedRequest.new({}).allowed_signature_methods
   end
 end
