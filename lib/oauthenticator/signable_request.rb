@@ -24,9 +24,6 @@ module OAuthenticator
 
       if @attributes['authorization']
         # this means we are signing an existing request to validate the received signature. don't use defaults.
-        if @attributes['authorization'].is_a?(String)
-          @attributes['authorization'] = OAuthenticator.parse_authorization(@attributes['authorization'])
-        end
         unless @attributes['authorization'].is_a?(Hash)
           raise TypeError, "authorization must be a Hash"
         end
