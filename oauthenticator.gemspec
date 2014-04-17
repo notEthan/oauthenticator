@@ -12,21 +12,15 @@ Gem::Specification.new do |spec|
   spec.homepage      = %q(https://github.com/notEthan/oauthenticator)
   spec.license       = 'MIT'
 
-  spec.files         = [
+  spec.files         = `git ls-files -z lib`.split("\x0") + [
     '.yardopts',
     'LICENSE.txt',
     'README.md',
-    'lib/oauthenticator.rb',
-    'lib/oauthenticator/middleware.rb',
-    'lib/oauthenticator/config_methods.rb',
-    'lib/oauthenticator/signed_request.rb',
-    'lib/oauthenticator/version.rb'
+    'Rakefile.rb',
   ]
   spec.executables   = []
-  spec.test_files    = [
-    'test/helper.rb',
-    'test/oauthenticator_test.rb',
-    'test/config_methods_test.rb',
+  spec.test_files    = `git ls-files -z test`.split("\x0") + [
+    '.simplecov',
   ]
   spec.require_paths = ['lib']
 
