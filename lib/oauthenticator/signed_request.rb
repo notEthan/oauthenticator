@@ -170,7 +170,7 @@ module OAuthenticator
               errors
             else
               # proceed to check signature
-              signable_request = SignableRequest.new(@attributes.merge(secrets))
+              signable_request = SignableRequest.new(@attributes.merge(secrets).merge('authorization' => oauth_header_params))
               unless self.signature == signable_request.signature
                 {'Authorization oauth_signature' => ['is invalid']}
               else

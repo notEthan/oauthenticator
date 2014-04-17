@@ -28,7 +28,7 @@ module OAuthenticator
           @attributes['authorization'] = OAuthenticator.parse_authorization(@attributes['authorization'])
         end
         unless @attributes['authorization'].is_a?(Hash)
-          raise TypeError, "authorization must be a String or Hash"
+          raise TypeError, "authorization must be a Hash"
         end
       else
         # defaults
