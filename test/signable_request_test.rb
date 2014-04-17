@@ -3,8 +3,8 @@ proc { |p| $:.unshift(p) unless $:.any? { |lp| File.expand_path(lp) == p } }.cal
 require 'helper'
 
 describe OAuthenticator::SignableRequest do
-  def example_request(attributes={})
-    OAuthenticator::SignableRequest.new({
+  let :example_initialize_attrs do
+    {
       :request_method => 'get',
       :uri => 'http://example.com',
       :media_type => 'text/plain',
@@ -12,21 +12,39 @@ describe OAuthenticator::SignableRequest do
       :consumer_key => 'a consumer key',
       :consumer_secret => 'a consumer secret',
       :signature_method => 'PLAINTEXT'
-    }.merge(attributes))
+    }
   end
 
+  def example_request(attributes={})
+    OAuthenticator::SignableRequest.new(example_initialize_attrs.merge(attributes))
+  end
 
-  describe 'default attributes' do
-    it('generates nonces') do
-      assert_equal(2, 2.times.map { example_request.protocol_params['oauth_nonce'] }.uniq.compact.size)
+  describe 'initialize' do
+    describe 'default attributes' do
+      it('generates nonces') do
+        assert_equal(2, 2.times.map { example_request.protocol_params['oauth_nonce'] }.uniq.compact.size)
+      end
+      it('defaults to version 1.0') { assert_equal('1.0', example_request.protocol_params['oauth_version']) }
+      it 'lets you omit version if you really want to' do
+        assert(!example_request(:version => nil).protocol_params.key?('oauth_version'))
+      end
+      it 'generates timestamp' do
+        Timecop.freeze Time.at 1391021695
+        assert_equal 1391021695.to_s, example_request.protocol_params['oauth_timestamp']
+      end
     end
-    it('defaults to version 1.0') { assert_equal('1.0', example_request.protocol_params['oauth_version']) }
-    it 'lets you omit version if you really want to' do
-      assert(!example_request(:version => nil).protocol_params.key?('oauth_version'))
-    end
-    it 'generates timestamp' do
-      Timecop.freeze Time.at 1391021695
-      assert_equal 1391021695.to_s, example_request.protocol_params['oauth_timestamp']
+
+    it 'accepts string and symbol' do
+      initialize_attrs = example_initialize_attrs.merge(:nonce => 'a nonce', :timestamp => '1196666512')
+      initialize_attr_variants = {
+        :by_string => initialize_attrs.map { |k,v| {k.to_s => v} }.inject({}, &:update),
+        :by_symbol => initialize_attrs.map { |k,v| {k.to_sym => v} }.inject({}, &:update),
+        :by_random_mix => initialize_attrs.map { |k,v| {rand(2) == 0 ? k.to_s : k.to_sym => v} }.inject({}, &:update)
+      }
+      authorizations = initialize_attr_variants.values.map do |attrs|
+        OAuthenticator::SignableRequest.new(attrs).authorization
+      end
+      assert_equal(1, authorizations.uniq.size)
     end
   end
 
@@ -119,6 +137,10 @@ describe OAuthenticator::SignableRequest do
       assert_equal('https://example.com/F', example_request(:uri => 'https://example.com/F').send(:base_string_uri))
       assert_equal('https://example.com/F', example_request(:uri => 'https://example.com:443/F').send(:base_string_uri))
       assert_equal('https://example.com:444/F', example_request(:uri => 'https://example.com:444/F').send(:base_string_uri))
+    end
+
+    it 'excludes query and fragment' do
+      assert_equal('http://example.com/FooBar', example_request(:uri => 'http://example.com/FooBar?foo=bar#foobar').send(:base_string_uri))
     end
   end
 
