@@ -1,7 +1,6 @@
 # encoding: utf-8
 proc { |p| $:.unshift(p) unless $:.any? { |lp| File.expand_path(lp) == p } }.call(File.expand_path('.', File.dirname(__FILE__)))
 require 'helper'
-require 'simple_oauth'
 
 # config methods for testing OAuthenticator. simple 
 module OAuthenticatorTestConfigMethods
@@ -82,27 +81,31 @@ describe OAuthenticator::Middleware do
 
   it 'makes a valid two-legged signed request (generated)' do
     request = Rack::Request.new(Rack::MockRequest.env_for('/', :method => 'GET'))
-    request.env['HTTP_AUTHORIZATION'] = SimpleOAuth::Header.new(
-      request.request_method,
-      request.url,
-      nil,
-      {:consumer_key => consumer_key, :consumer_secret => consumer_secret}
-    ).to_s
+    request.env['HTTP_AUTHORIZATION'] = OAuthenticator::SignableRequest.new({
+      :request_method => request.request_method,
+      :uri => request.url,
+      :media_type => request.media_type,
+      :body => request.body,
+      :signature_method => 'HMAC-SHA1',
+      :consumer_key => consumer_key,
+      :consumer_secret => consumer_secret,
+    }).authorization
     assert_response(200, '☺', *oapp.call(request.env))
   end
 
   it 'makes a valid two-legged signed request with a blank access token (generated)' do
     request = Rack::Request.new(Rack::MockRequest.env_for('/', :method => 'GET'))
-    request.env['HTTP_AUTHORIZATION'] = SimpleOAuth::Header.new(
-      request.request_method,
-      request.url,
-      nil,
-      { :consumer_key => consumer_key,
-        :consumer_secret => consumer_secret,
-        :token => '',
-        :token_secret => '',
-      }
-    ).to_s
+    request.env['HTTP_AUTHORIZATION'] = OAuthenticator::SignableRequest.new({
+      :request_method => request.request_method,
+      :uri => request.url,
+      :media_type => request.media_type,
+      :body => request.body,
+      :signature_method => 'HMAC-SHA1',
+      :consumer_key => consumer_key,
+      :consumer_secret => consumer_secret,
+      :token => '',
+      :token_secret => '',
+    }).authorization
     assert_response(200, '☺', *oapp.call(request.env))
   end
 
@@ -112,27 +115,31 @@ describe OAuthenticator::Middleware do
       :input => 'a=b&a=c',
       'CONTENT_TYPE' => 'application/x-www-form-urlencoded; charset=UTF8',
     ))
-    request.env['HTTP_AUTHORIZATION'] = SimpleOAuth::Header.new(
-      request.request_method,
-      request.url,
-      [['a', 'b'], ['a', 'c']],
-      {:consumer_key => consumer_key, :consumer_secret => consumer_secret}
-    ).to_s
+    request.env['HTTP_AUTHORIZATION'] = OAuthenticator::SignableRequest.new({
+      :request_method => request.request_method,
+      :uri => request.url,
+      :media_type => request.media_type,
+      :body => request.body,
+      :signature_method => 'HMAC-SHA1',
+      :consumer_key => consumer_key,
+      :consumer_secret => consumer_secret
+    }).authorization
     assert_response(200, '☺', *oapp.call(request.env))
   end
 
   it 'makes a valid three-legged signed request (generated)' do
     request = Rack::Request.new(Rack::MockRequest.env_for('/', :method => 'GET'))
-    request.env['HTTP_AUTHORIZATION'] = SimpleOAuth::Header.new(
-      request.request_method,
-      request.url,
-      nil,
-      { :consumer_key => consumer_key,
-        :consumer_secret => consumer_secret,
-        :token => access_token,
-        :token_secret => access_token_secret,
-      }
-    ).to_s
+    request.env['HTTP_AUTHORIZATION'] = OAuthenticator::SignableRequest.new({
+      :request_method => request.request_method,
+      :uri => request.url,
+      :media_type => request.media_type,
+      :body => request.body,
+      :signature_method => 'HMAC-SHA1',
+      :consumer_key => consumer_key,
+      :consumer_secret => consumer_secret,
+      :token => access_token,
+      :token_secret => access_token_secret,
+    }).authorization
     assert_response(200, '☺', *oapp.call(request.env))
   end
 
@@ -415,12 +422,15 @@ describe OAuthenticator::Middleware do
       bapp = proc { |env| was_authenticated = env['oauth.authenticated']; [200, {}, ['☺']] }
       boapp = OAuthenticator::Middleware.new(bapp, :bypass => proc { true }, :config_methods => OAuthenticatorTestConfigMethods)
       request = Rack::Request.new(Rack::MockRequest.env_for('/', :method => 'GET'))
-      request.env['HTTP_AUTHORIZATION'] = SimpleOAuth::Header.new(
-        request.request_method,
-        request.url,
-        nil,
-        {:consumer_key => consumer_key, :consumer_secret => consumer_secret}
-      ).to_s
+      request.env['HTTP_AUTHORIZATION'] = OAuthenticator::SignableRequest.new({
+        :request_method => request.request_method,
+        :uri => request.url,
+        :media_type => request.media_type,
+        :body => request.body,
+        :signature_method => 'HMAC-SHA1',
+        :consumer_key => consumer_key,
+        :consumer_secret => consumer_secret
+      }).authorization
       assert_response(200, '☺', *boapp.call(request.env))
       assert(was_authenticated == false)
     end
@@ -430,12 +440,15 @@ describe OAuthenticator::Middleware do
       bapp = proc { |env| was_authenticated = env['oauth.authenticated']; [200, {}, ['☺']] }
       boapp = OAuthenticator::Middleware.new(bapp, :bypass => proc { false }, :config_methods => OAuthenticatorTestConfigMethods)
       request = Rack::Request.new(Rack::MockRequest.env_for('/', :method => 'GET'))
-      request.env['HTTP_AUTHORIZATION'] = SimpleOAuth::Header.new(
-        request.request_method,
-        request.url,
-        nil,
-        {:consumer_key => consumer_key, :consumer_secret => consumer_secret}
-      ).to_s
+      request.env['HTTP_AUTHORIZATION'] = OAuthenticator::SignableRequest.new({
+        :request_method => request.request_method,
+        :uri => request.url,
+        :media_type => request.media_type,
+        :body => request.body,
+        :signature_method => 'HMAC-SHA1',
+        :consumer_key => consumer_key,
+        :consumer_secret => consumer_secret
+      }).authorization
       assert_response(200, '☺', *boapp.call(request.env))
       assert(was_authenticated == true)
     end
