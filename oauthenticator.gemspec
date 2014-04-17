@@ -7,9 +7,8 @@ Gem::Specification.new do |spec|
   spec.version       = OAuthenticator::VERSION
   spec.authors       = ["Ethan"]
   spec.email         = ["ethan@unth"]
-  spec.summary       = %q(OAuth 1.0 request authentication middleware)
-  spec.description   = %q(OAuthenticator authenticates OAuth 1.0 signed requests, primarily as a ) +
-    %q(middleware, and forms useful error messages when authentication fails.)
+  spec.summary       = %q(OAuth 1.0 request signing and authentication)
+  spec.description   = %q(OAuthenticator signs and authenticates OAuth 1.0 requests)
   spec.homepage      = %q(https://github.com/notEthan/oauthenticator)
   spec.license       = 'MIT'
 
