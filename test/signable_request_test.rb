@@ -3,16 +3,20 @@ proc { |p| $:.unshift(p) unless $:.any? { |lp| File.expand_path(lp) == p } }.cal
 require 'helper'
 
 describe OAuthenticator::SignableRequest do
-  let :example_initialize_attrs do
+  let :base_example_initialize_attrs do
     {
       :request_method => 'get',
       :uri => 'http://example.com',
       :media_type => 'text/plain',
       :body => 'hi there',
+    }
+  end
+  let :example_initialize_attrs do
+    base_example_initialize_attrs.merge({
       :consumer_key => 'a consumer key',
       :consumer_secret => 'a consumer secret',
       :signature_method => 'PLAINTEXT'
-    }
+    })
   end
 
   def example_request(attributes={})
@@ -45,6 +49,22 @@ describe OAuthenticator::SignableRequest do
         OAuthenticator::SignableRequest.new(attrs).authorization
       end
       assert_equal(1, authorizations.uniq.size)
+    end
+
+    it 'checks type' do
+      assert_raises(TypeError) { OAuthenticator::SignableRequest.new("hello!") }
+    end
+
+    it 'checks authorization type' do
+      assert_raises(TypeError) { example_request(:authorization => "hello!") }
+    end
+
+    it 'does not allow protocol parameters to be specified when authorization is specified' do
+      OAuthenticator::SignableRequest::PROTOCOL_PARAM_KEYS.map do |key|
+        assert_raises(ArgumentError) do
+          OAuthenticator::SignableRequest.new(base_example_initialize_attrs.merge(:authorization => {}, key => 'val'))
+        end
+      end
     end
   end
 
@@ -117,6 +137,18 @@ describe OAuthenticator::SignableRequest do
       # hexes are uppercase 
       assert authorization.include?(%q(consumer_key="%20%21%23%24%25%26%27%28%29%2A%2B%2C-.%2F0123456789%3A%3B%3C%3D%3E%3F%40ABCDEFGHIJKLMNOPQRSTUVWXYZ%5B%5D%5E_%60abcdefghijklmnopqrstuvwxyz%7B%7C%7D~%C4%80"))
     end
+
+    it 'generally looks like: OAuth key="quoted-value", anotherkey="anothervalue"' do
+      assert_equal(%q(OAuth ) +
+        %q(oauth_consumer_key="a%20consumer%20key", ) +
+        %q(oauth_nonce="anonce", ) +
+        %q(oauth_signature="a%2520consumer%2520secret%26", ) +
+        %q(oauth_signature_method="PLAINTEXT", ) +
+        %q(oauth_timestamp="1397726597", ) +
+        %q(oauth_version="1.0"),
+        example_request(:nonce => 'anonce', :timestamp => 1397726597).authorization
+      )
+    end
   end
 
   describe 'uri, per section 3.4.1.2' do
@@ -152,6 +184,23 @@ describe OAuthenticator::SignableRequest do
     end
   end
 
+  describe 'body' do
+    it 'takes a string' do
+      assert_equal('abody', example_request(:body => 'abody').send(:read_body))
+    end
+    it 'takes an IO' do
+      assert_equal('abody', example_request(:body => StringIO.new('abody')).send(:read_body))
+    end
+    it 'rejects something else' do
+      assert_raises(TypeError) { example_request(:body => Object.new).send(:read_body) }
+    end
+    it 'calculates their authorization the same' do
+      request_io_body = example_request(:body => StringIO.new('abody'), :nonce => 1, :timestamp => 1)
+      request_str_body = example_request(:body => 'abody', :nonce => 1, :timestamp => 1)
+      assert_equal(request_io_body.authorization, request_str_body.authorization)
+    end
+  end
+
   it 'includes unrecognized authorization params when calculating signature base' do
     authorization = %q(OAuth realm="Example",
       oauth_foo="bar",
@@ -160,13 +209,9 @@ describe OAuthenticator::SignableRequest do
       oauth_timestamp="137131201",
       oauth_nonce="7d8f3e4a"
     )
-    assert OAuthenticator::SignableRequest.new(
-      :request_method => 'get',
-      :uri => 'http://example.com',
-      :media_type => 'text/plain',
-      :body => 'hi there',
+    assert OAuthenticator::SignableRequest.new(base_example_initialize_attrs.merge(
       :authorization => OAuthenticator.parse_authorization(authorization)
-    ).send(:signature_base).include?("oauth_foo%3Dbar")
+    )).send(:signature_base).include?("oauth_foo%3Dbar")
   end
 
   it 'reproduces a successful OAuth example GET (lifted from simple oauth)' do
