@@ -27,6 +27,14 @@ module OAuthenticator
         unless @attributes['authorization'].is_a?(Hash)
           raise TypeError, "authorization must be a Hash"
         end
+
+        # if authorization is specified, protocol params should not be specified in the regular attributes 
+        given_protocol_params = @attributes.reject { |k,v| !(PROTOCOL_PARAM_KEYS.include?(k) && v) }
+        if given_protocol_params.any?
+          raise ArgumentError, "an existing authorization was given, but protocol parameters were also " +
+            "given. protocol parameters should not be specified when verifying an existing authorization. " +
+            "given protocol parameters were: #{given_protocol_params.inspect}"
+        end
       else
         # defaults
         defaults = {
