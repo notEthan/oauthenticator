@@ -6,6 +6,24 @@ require 'strscan'
 require 'oauthenticator/parse_authorization'
 
 module OAuthenticator
+  # a request which may be signed with OAuth, generally in order to apply the signature to an outgoing request 
+  # in the Authorization header.
+  #
+  # primarily this is to be used like:
+  #
+  #     oauthenticator_signable_request = OAuthenticator::SignableRequest.new(
+  #       :request_method => my_request_method,
+  #       :uri => my_request_uri,
+  #       :media_type => my_request_media_type,
+  #       :body => my_request_body,
+  #       :signature_method => my_oauth_signature_method,
+  #       :consumer_key => my_oauth_consumer_key,
+  #       :consumer_secret => my_oauth_consumer_secret,
+  #       :token => my_oauth_token,
+  #       :token_secret => my_oauth_token_secret,
+  #       :realm => my_authorization_realm
+  #     )
+  #     my_http_request.headers['Authorization'] = oauthenticator_signable_request.authorization
   class SignableRequest
     # keys of OAuth protocol parameters which form the Authorization header (with an oauth_ prefix). 
     # signature is considered separately.
