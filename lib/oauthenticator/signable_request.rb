@@ -30,6 +30,7 @@ module OAuthenticator
     PROTOCOL_PARAM_KEYS = %w(consumer_key token signature_method timestamp nonce version).map(&:freeze).freeze
 
     # initialize a signable request with the following attributes (keys may be string or symbol):
+    #
     # - request_method (required) - get, post, etc. may be string or symbol.
     # - uri (required) - request URI. to_s is called so URI or Addressable::URI or whatever may be passed.
     # - media_type (required) - the request media type. note that this may be different than the Content-Type 
@@ -98,11 +99,15 @@ module OAuthenticator
     end
 
     # returns the Authorization header generated for this request.
+    #
+    # @return [String] Authorization header
     def authorization
       "OAuth #{normalized_protocol_params_string}"
     end
 
     # the oauth_signature calculated for this request.
+    #
+    # @return [String] oauth signature
     def signature
       rbmethod = SIGNATURE_METHODS[signature_method] ||
         raise(ArgumentError, "invalid signature method: #{signature_method}")
@@ -116,12 +121,16 @@ module OAuthenticator
     #
     # note that if this is a previously-signed request, the oauth_signature attribute returned is the 
     # received value, NOT the value calculated by us.
+    #
+    # @return [Hash<String, String>] protocol params
     def protocol_params
       @attributes['authorization']
     end
 
     # protocol params for this request as described in section 3.4.1.3, including our calculated 
     # oauth_signature.
+    #
+    # @return [Hash<String, String>] signed protocol params
     def signed_protocol_params
       protocol_params.merge('oauth_signature' => signature)
     end
@@ -129,12 +138,16 @@ module OAuthenticator
     private
 
     # signature base string for signing. section 3.4.1
+    #
+    # @return [String]
     def signature_base
       parts = [normalized_request_method, base_string_uri, normalized_request_params_string]
       parts.map { |v| OAuthenticator.escape(v) }.join('&')
     end
 
     # section 3.4.1.2
+    #
+    # @return [String]
     def base_string_uri
       URI.parse(@attributes['uri'].to_s).tap do |uri|
         uri.scheme = uri.scheme.downcase
@@ -146,16 +159,22 @@ module OAuthenticator
     end
 
     # section 3.4.1.1
+    #
+    # @return [String]
     def normalized_request_method
       @attributes['request_method'].to_s.upcase
     end
 
     # section 3.4.1.3.2
+    #
+    # @return [String]
     def normalized_request_params_string
       normalized_request_params.map { |kv| kv.map { |v| OAuthenticator.escape(v) } }.sort.map { |p| p.join('=') }.join('&')
     end
 
     # section 3.4.1.3
+    #
+    # @return [Array<Array<String> (size 2)>]
     def normalized_request_params
       query_params + protocol_params.reject { |k,v| %w(realm oauth_signature).include?(k) }.to_a + entity_params
     end
@@ -165,7 +184,7 @@ module OAuthenticator
     # parsed query params, extracted from the request URI. since keys may appear multiple times, represented 
     # as an array of two-element arrays and not a hash
     #
-    # @return [Array<Array<String>>] 
+    # @return [Array<Array<String, nil> (size 2)>]
     def query_params
       parse_form_encoded(URI.parse(@attributes['uri'].to_s).query || '')
     end
@@ -175,8 +194,7 @@ module OAuthenticator
     # parsed entity params from the body, when the request is form encoded. since keys may appear multiple 
     # times, represented as an array of two-element arrays and not a hash
     #
-    # @return [Array<Array<String>>] since keys may appear multiple times, represented as an array of 
-    # two-element arrays and not a hash
+    # @return [Array<Array<String, nil> (size 2)>]
     def entity_params
       if form_encoded?
         parse_form_encoded(read_body)
@@ -186,6 +204,8 @@ module OAuthenticator
     end
 
     # like CGI.parse but it keeps keys without any value. doesn't keep blank keys though.
+    #
+    # @return [Array<Array<String, nil> (size 2)>]
     def parse_form_encoded(data)
       data.split(/[&;]/).map do |pair|
         key, value = pair.split('=', 2).map { |v| CGI::unescape(v) }
@@ -194,11 +214,15 @@ module OAuthenticator
     end
 
     # string of protocol params including signature, sorted 
+    #
+    # @return [String]
     def normalized_protocol_params_string
       signed_protocol_params.sort.map { |(k,v)| %Q(#{OAuthenticator.escape(k)}="#{OAuthenticator.escape(v)}") }.join(', ')
     end
 
     # reads the request body, be it String or IO 
+    #
+    # @return [String] request body
     def read_body
       body = @attributes['body']
       if body.is_a?(String)
@@ -214,22 +238,31 @@ module OAuthenticator
       end
     end
 
+    # signature method 
+    #
+    # @return [String]
     def signature_method
       @attributes['authorization']['oauth_signature_method']
     end
 
     # is the media type application/x-www-form-urlencoded
+    #
+    # @return [Boolean]
     def form_encoded?
       @attributes['media_type'] == "application/x-www-form-urlencoded"
     end
 
     # signature, with method RSA-SHA1. section 3.4.3 
+    #
+    # @return [String]
     def rsa_sha1_signature
       private_key = OpenSSL::PKey::RSA.new(@attributes['consumer_secret'])
       Base64.encode64(private_key.sign(OpenSSL::Digest::SHA1.new, signature_base)).chomp.gsub(/\n/, '')
     end
 
     # signature, with method HMAC-SHA1. section 3.4.2
+    #
+    # @return [String]
     def hmac_sha1_signature
       # hmac secret is same as plaintext signature 
       secret = plaintext_signature
@@ -237,6 +270,8 @@ module OAuthenticator
     end
 
     # signature, with method plaintext. section 3.4.4
+    #
+    # @return [String]
     def plaintext_signature
       @attributes.values_at('consumer_secret', 'token_secret').map { |v| OAuthenticator.escape(v) }.join('&')
     end
