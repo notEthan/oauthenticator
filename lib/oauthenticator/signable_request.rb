@@ -200,25 +200,30 @@ module OAuthenticator
       @attributes['authorization']['oauth_signature_method']
     end
 
+    # is the media type application/x-www-form-urlencoded
     def form_encoded?
       @attributes['media_type'] == "application/x-www-form-urlencoded"
     end
 
+    # signature, with method RSA-SHA1. section 3.4.3 
     def rsa_sha1_signature
       private_key = OpenSSL::PKey::RSA.new(@attributes['consumer_secret'])
       Base64.encode64(private_key.sign(OpenSSL::Digest::SHA1.new, signature_base)).chomp.gsub(/\n/, '')
     end
 
+    # signature, with method HMAC-SHA1. section 3.4.2
     def hmac_sha1_signature
       # hmac secret is same as plaintext signature 
       secret = plaintext_signature
       Base64.encode64(OpenSSL::HMAC.digest(OpenSSL::Digest::SHA1.new, secret, signature_base)).chomp.gsub(/\n/, '')
     end
 
+    # signature, with method plaintext. section 3.4.4
     def plaintext_signature
       @attributes.values_at('consumer_secret', 'token_secret').map { |v| OAuthenticator.escape(v) }.join('&')
     end
 
+    # map of oauth signature methods to their signature instance methods on this class 
     SIGNATURE_METHODS = {
       'RSA-SHA1'.freeze => instance_method(:rsa_sha1_signature),
       'HMAC-SHA1'.freeze => instance_method(:hmac_sha1_signature),
