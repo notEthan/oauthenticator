@@ -124,7 +124,7 @@ module OAuthenticator
     #
     # @return [Hash<String, String>] protocol params
     def protocol_params
-      @attributes['authorization']
+      @attributes['authorization'].dup
     end
 
     # protocol params for this request as described in section 3.4.1.3, including our calculated 
