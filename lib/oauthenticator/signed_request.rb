@@ -31,7 +31,7 @@ module OAuthenticator
     ATTRIBUTE_KEYS = %w(request_method uri body media_type authorization).map(&:freeze).freeze
 
     # oauth attributes parsed from the request authorization
-    OAUTH_ATTRIBUTE_KEYS = (SignableRequest::PROTOCOL_PARAM_KEYS + %w(signature)).freeze
+    OAUTH_ATTRIBUTE_KEYS = (SignableRequest::PROTOCOL_PARAM_KEYS + %w(signature body_hash)).freeze
 
     # readers 
     ATTRIBUTE_KEYS.each { |attribute_key| define_method(attribute_key) { @attributes[attribute_key] } }
@@ -167,10 +167,40 @@ module OAuthenticator
           errors['Authorization oauth_signature'] << "is missing"
         end
 
+        signable_request = SignableRequest.new(@attributes.merge(secrets).merge('authorization' => oauth_header_params))
+
+        # body hash
+
+        # present?
+        if body_hash?
+          # allowed?
+          if !signable_request.form_encoded?
+            # correct?
+            if body_hash == signable_request.body_hash
+              # all good
+            else
+              errors['Authorization oauth_body_hash'] << "is invalid"
+            end
+          else
+            errors['Authorization oauth_body_hash'] << "must not be included with form-encoded requests"
+          end
+        else
+          # allowed?
+          if !signable_request.form_encoded?
+            # required?
+            if body_hash_required?
+              errors['Authorization oauth_body_hash'] << "is required (on non-form-encoded requests)"
+            else
+              # okay - not supported by client, but allowed
+            end
+          else
+            # all good
+          end
+        end
+
         throw(:errors, errors) if errors.any?
 
         # proceed to check signature
-        signable_request = SignableRequest.new(@attributes.merge(secrets).merge('authorization' => oauth_header_params))
         unless self.signature == signable_request.signature
           throw(:errors, {'Authorization oauth_signature' => ['is invalid']})
         end

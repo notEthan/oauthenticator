@@ -474,6 +474,65 @@ describe OAuthenticator::SignableRequest do
     end
   end
 
+  describe 'body hash' do
+    describe 'example appendix A1' do
+      let :request do
+        OAuthenticator::SignableRequest.new({
+          :request_method => 'PUT',
+          :uri => 'http://www.example.com/resource',
+          :media_type => 'text/plain',
+          :body => 'Hello World!',
+          :signature_method => 'HMAC-SHA1',
+          :token => "token",
+          :consumer_key => "consumer",
+          :timestamp => "1236874236",
+          :nonce => "10369470270925",
+        })
+      end
+      it 'has the same oauth body hash' do
+        assert_equal('Lve95gjOVATpfV8EL5X4nxwjKHE=', request.signed_protocol_params['oauth_body_hash'])
+      end
+      it 'has the same signature base' do
+        assert_equal(
+          %q(PUT&http%3A%2F%2Fwww.example.com%2Fresource&oauth_body_hash%3D) +
+          %q(Lve95gjOVATpfV8EL5X4nxwjKHE%253D%26oauth_consumer_key%3Dconsum) +
+          %q(er%26oauth_nonce%3D10369470270925%26oauth_signature_method%3DH) +
+          %q(MAC-SHA1%26oauth_timestamp%3D1236874236%26oauth_token%3Dtoken%) +
+          %q(26oauth_version%3D1.0),
+          request.send(:signature_base)
+        )
+      end
+    end
+    describe 'example appendix A2' do
+      let :request do
+        OAuthenticator::SignableRequest.new({
+          :request_method => 'GET',
+          :uri => 'http://www.example.com/resource',
+          :media_type => nil,
+          :body => nil,
+          :signature_method => 'HMAC-SHA1',
+          :token => "token",
+          :consumer_key => "consumer",
+          :timestamp => "1238395022",
+          :nonce => "8628868109991",
+        })
+      end
+      it 'has the same oauth body hash' do
+        assert_equal('2jmj7l5rSw0yVb/vlWAYkK/YBwk=', request.signed_protocol_params['oauth_body_hash'])
+      end
+      it 'has the same signature base' do
+        assert_equal(
+          %q(GET&http%3A%2F%2Fwww.example.com%2Fresource&oauth_body_hash%3D2jmj7) +
+          %q(l5rSw0yVb%252FvlWAYkK%252FYBwk%253D%26oauth_consumer_key%3Dconsumer) +
+          %q(%26oauth_nonce%3D8628868109991%26oauth_signature_method%3DHMAC-SHA1) +
+          %q(%26oauth_timestamp%3D1238395022%26oauth_token%3Dtoken%26oauth_versi) +
+          %q(on%3D1.0),
+          request.send(:signature_base)
+        )
+      end
+    end
+  end
+
   it 'reproduces a successful OAuth example GET (lifted from simple oauth)' do
     request = OAuthenticator::SignableRequest.new(
       :request_method => :get,

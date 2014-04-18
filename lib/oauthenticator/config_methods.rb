@@ -121,5 +121,21 @@ module OAuthenticator
     def access_token_belongs_to_consumer?
       config_method_not_implemented
     end
+
+    # whether the request will be considered valid if it is missing the oauth_body_hash parameter, when that 
+    # parameter is allowed. if you require requests to include the oauth_body_hash parameter, return true 
+    # here. 
+    #
+    # the default for this method is false, since the oauth body hash is not widely implemented. 
+    #
+    # this only applies to requests which are NOT form encoded - requests which are form-encoded must never 
+    # have the oauth_body_hash parameter regardless of this setting and will be rejected as inauthentic, per 
+    # the OAuth Request Body Hash spec. this also does not apply to requests with a signature method which 
+    # does not have a corresponding body hash method - i.e., the PLAINTEXT signature method.
+    #
+    # @return [Boolean] whether body hash is required
+    def body_hash_required?
+      false
+    end
   end
 end
