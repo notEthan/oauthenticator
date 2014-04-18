@@ -191,6 +191,65 @@ Lw03eHTNQghS0A==
     end
   end
 
+  describe 'signature' do
+    describe 'PLAINTEXT' do
+      it 'signs with the consumer and token secrets, encoded and &-joined' do
+        request = example_request(:token => 'a token', :token_secret => 'a token secret', :signature_method => 'PLAINTEXT')
+        assert_equal('a%20consumer%20secret&a%20token%20secret', request.signed_protocol_params['oauth_signature'])
+      end
+    end
+
+    describe 'HMAC-SHA1' do
+      it 'signs with a HMAC-SHA1 digest of the signature base' do
+        request = example_request(
+          :token => 'a token',
+          :token_secret => 'a token secret',
+          :signature_method => 'HMAC-SHA1',
+          :nonce => 'a nonce',
+          :timestamp => 1397726597
+        )
+        assert_equal('rVKcy4CgAih1kv4HAMGiNnjmUJk=', request.signed_protocol_params['oauth_signature'])
+      end
+    end
+
+    describe 'RSA-SHA1' do
+      it 'signs with a RSA private key SHA1 signature' do
+        request = example_request(
+          :consumer_secret => rsa_private_key,
+          :token => 'a token',
+          :token_secret => 'a token secret',
+          :signature_method => 'RSA-SHA1',
+          :nonce => 'a nonce',
+          :timestamp => 1397726597
+        )
+        assert_equal(
+          "s3/TkrCJw54tOpsKUHkoQ9PeH1r4wB2fNb70XC2G1ef7Wb/dwwNUOhtjtpGMSDhmYQHzEPt0dAJ+PgeNs1O5NZJQB5JqdsmrhLS3ZdHx2iucxYvZSuDNi0GxaEepz5VS9rg+y5Gmep60BpAKhX0KGnkMY9HIhomTPSrYidAfDOE=",
+          request.signed_protocol_params['oauth_signature']
+        )
+      end
+
+      it 'ignores the token secret' do
+        request_attrs = {
+          :consumer_secret => rsa_private_key,
+          :token => 'a token',
+          :signature_method => 'RSA-SHA1',
+          :nonce => 'a nonce',
+          :timestamp => 1397726597,
+        }
+        request1 = example_request(request_attrs.merge(:token_secret => 'a token secret'))
+        request2 = example_request(request_attrs.merge(:token_secret => 'an entirely different token secret'))
+        assert_equal(request1.signature, request2.signature)
+        assert_equal(request1.authorization, request2.authorization)
+      end
+
+      describe 'with an invalid key' do
+        it 'errors' do
+          assert_raises(OpenSSL::PKey::RSAError) { example_request(:signature_method => 'RSA-SHA1').signature }
+        end
+      end
+    end
+  end
+
   describe 'uri, per section 3.4.1.2' do
     it 'lowercases scheme and host' do
       [
