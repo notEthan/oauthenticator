@@ -139,6 +139,13 @@ module OAuthenticator
       protocol_params.merge('oauth_signature' => signature)
     end
 
+    # is the media type application/x-www-form-urlencoded
+    #
+    # @return [Boolean]
+    def form_encoded?
+      @attributes['media_type'] == "application/x-www-form-urlencoded"
+    end
+
     private
 
     # signature base string for signing. section 3.4.1
@@ -249,13 +256,6 @@ module OAuthenticator
     # @return [String]
     def signature_method
       @attributes['authorization']['oauth_signature_method']
-    end
-
-    # is the media type application/x-www-form-urlencoded
-    #
-    # @return [Boolean]
-    def form_encoded?
-      @attributes['media_type'] == "application/x-www-form-urlencoded"
     end
 
     # signature, with method RSA-SHA1. section 3.4.3 
