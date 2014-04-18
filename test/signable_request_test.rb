@@ -346,15 +346,25 @@ Lw03eHTNQghS0A==
     end
   end
 
-  it 'includes unrecognized authorization params when calculating signature base' do
-    authorization = %q(OAuth realm="Example",
-      oauth_foo="bar",
-      oauth_consumer_key="9djdj82h48djs9d2",
-      oauth_signature_method="HMAC-SHA1",
-      oauth_timestamp="137131201",
-      oauth_nonce="7d8f3e4a"
-    )
-    assert(example_signed_request(OAuthenticator.parse_authorization(authorization)).send(:signature_base).include?("oauth_foo%3Dbar"))
+  describe 'signature_base' do
+    it 'includes unrecognized authorization params when calculating signature base' do
+      authorization = %q(OAuth realm="Example",
+        oauth_foo="bar",
+        oauth_consumer_key="9djdj82h48djs9d2",
+        oauth_signature_method="HMAC-SHA1",
+        oauth_timestamp="137131201",
+        oauth_nonce="7d8f3e4a"
+      )
+      assert(example_signed_request(OAuthenticator.parse_authorization(authorization)).send(:signature_base).include?("oauth_foo%3Dbar"))
+    end
+
+    it 'does include body in a formencoded request' do
+      assert(example_request(:media_type => 'application/x-www-form-urlencoded', :body => 'foo=bar').send(:signature_base).include?('foo'))
+    end
+
+    it 'does not include body in a non-formencoded request' do
+      assert(!example_request(:media_type => 'text/plain', :body => 'foo=bar').send(:signature_base).include?('foo'))
+    end
   end
 
   describe 'normalized request params' do
