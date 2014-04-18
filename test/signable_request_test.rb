@@ -345,6 +345,9 @@ describe OAuthenticator::SignableRequest do
     it 'takes an IO' do
       assert_equal('abody', example_request(:body => StringIO.new('abody')).send(:read_body))
     end
+    it 'takes nil' do
+      assert_equal('', example_request(:body => nil).send(:read_body))
+    end
     it 'rejects something else' do
       assert_raises(TypeError) { example_request(:body => Object.new).send(:read_body) }
     end

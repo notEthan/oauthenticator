@@ -33,9 +33,9 @@ module OAuthenticator
     #
     # - request_method (required) - get, post, etc. may be string or symbol.
     # - uri (required) - request URI. to_s is called so URI or Addressable::URI or whatever may be passed.
-    # - media_type (required) - the request media type. note that this may be different than the Content-Type 
-    #   header; other components of that such as encoding must not be included.
-    # - body (required) - the request body. may be a String or an IO.
+    # - media_type (required) - the request media type (may be nil if there is no body). note that this may be 
+    #   different than the Content-Type header; other components of that such as encoding must not be included.
+    # - body (required) - the request body. may be a String or an IO, or nil if no body is present.
     # - signature_method (required*) - oauth signature method (String)
     # - consumer_key (required*) - oauth consumer key (String)
     # - consumer_secret (required*) - oauth consumer secret (String)
@@ -229,7 +229,9 @@ module OAuthenticator
     # @return [String] request body
     def read_body
       body = @attributes['body']
-      if body.is_a?(String)
+      if body.nil?
+        ''
+      elsif body.is_a?(String)
         body
       elsif body.respond_to?(:read) && body.respond_to?(:rewind)
         body.rewind
