@@ -252,6 +252,27 @@ Lw03eHTNQghS0A==
     end
   end
 
+  describe 'protocol_params' do
+    it 'includes given protocol params with an oauth_ prefix' do
+      OAuthenticator::SignableRequest::PROTOCOL_PARAM_KEYS.each do |param_key|
+        assert_equal(example_request(param_key => 'a value').protocol_params["oauth_#{param_key}"], 'a value')
+      end
+    end
+    it 'does not include a calculated signature' do
+      assert !example_request.protocol_params.key?('oauth_signature')
+    end
+    it 'does include the signature of a given authorization' do
+      assert_equal('a signature', OAuthenticator::SignableRequest.new(base_example_initialize_attrs.merge(
+        :authorization => {'oauth_signature' => 'a signature'}
+      )).protocol_params['oauth_signature'])
+    end
+    it 'does include unknown parameters of a given authorization' do
+      assert_equal('bar', OAuthenticator::SignableRequest.new(base_example_initialize_attrs.merge(
+        :authorization => {'foo' => 'bar'}
+      )).protocol_params['foo'])
+    end
+  end
+
   describe 'uri, per section 3.4.1.2' do
     it 'lowercases scheme and host' do
       [
