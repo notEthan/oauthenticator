@@ -175,11 +175,17 @@ module OAuthenticator
         if body_hash?
           # allowed?
           if !signable_request.form_encoded?
-            # correct?
-            if body_hash == signable_request.body_hash
-              # all good
+            # applicable?
+            if SignableRequest::BODY_HASH_METHODS.key?(signature_method)
+              # correct?
+              if body_hash == signable_request.body_hash
+                # all good
+              else
+                errors['Authorization oauth_body_hash'] << "is invalid"
+              end
             else
-              errors['Authorization oauth_body_hash'] << "is invalid"
+              # received a body hash with plaintext. weird situation - we will ignore it; signature will not 
+              # be verified but it will be a part of the signature. 
             end
           else
             errors['Authorization oauth_body_hash'] << "must not be included with form-encoded requests"
