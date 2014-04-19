@@ -63,11 +63,10 @@ describe OAuthenticator::SignableRequest do
     end
 
     it 'accepts string and symbol' do
-      initialize_attrs = example_initialize_attrs.merge(:nonce => 'a nonce', :timestamp => '1196666512')
       initialize_attr_variants = {
-        :by_string => initialize_attrs.map { |k,v| {k.to_s => v} }.inject({}, &:update),
-        :by_symbol => initialize_attrs.map { |k,v| {k.to_sym => v} }.inject({}, &:update),
-        :by_random_mix => initialize_attrs.map { |k,v| {rand(2) == 0 ? k.to_s : k.to_sym => v} }.inject({}, &:update)
+        :by_string => example_initialize_attrs.map { |k,v| {k.to_s => v} }.inject({}, &:update),
+        :by_symbol => example_initialize_attrs.map { |k,v| {k.to_sym => v} }.inject({}, &:update),
+        :by_random_mix => example_initialize_attrs.map { |k,v| {rand(2) == 0 ? k.to_s : k.to_sym => v} }.inject({}, &:update)
       }
       authorizations = initialize_attr_variants.values.map do |attrs|
         OAuthenticator::SignableRequest.new(attrs).authorization
@@ -165,12 +164,10 @@ describe OAuthenticator::SignableRequest do
     it 'generally looks like: OAuth key="quoted-value", anotherkey="anothervalue"' do
       assert_equal(%q(OAuth ) +
         %q(oauth_consumer_key="a%20consumer%20key", ) +
-        %q(oauth_nonce="anonce", ) +
         %q(oauth_signature="a%2520consumer%2520secret%26", ) +
         %q(oauth_signature_method="PLAINTEXT", ) +
-        %q(oauth_timestamp="1397726597", ) +
         %q(oauth_version="1.0"),
-        example_request(:nonce => 'anonce', :timestamp => 1397726597).authorization
+        example_request.authorization
       )
     end
   end
@@ -219,8 +216,8 @@ describe OAuthenticator::SignableRequest do
       assert_raises(TypeError) { example_request(:body => Object.new).send(:read_body) }
     end
     it 'calculates their authorization the same' do
-      request_io_body = example_request(:body => StringIO.new('abody'), :nonce => 1, :timestamp => 1)
-      request_str_body = example_request(:body => 'abody', :nonce => 1, :timestamp => 1)
+      request_io_body = example_request(:body => StringIO.new('abody'))
+      request_str_body = example_request(:body => 'abody')
       assert_equal(request_io_body.authorization, request_str_body.authorization)
     end
   end
