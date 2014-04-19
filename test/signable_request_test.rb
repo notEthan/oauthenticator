@@ -20,7 +20,9 @@ describe OAuthenticator::SignableRequest do
   end
 
   def example_request(attributes={})
-    OAuthenticator::SignableRequest.new(example_initialize_attrs.merge(attributes))
+    OAuthenticator::SignableRequest.new(example_initialize_attrs.reject do |k,_|
+      attributes.keys.any? { |ak| ak.to_s == k.to_s }
+    end.merge(attributes))
   end
 
   let :rsa_private_key do
