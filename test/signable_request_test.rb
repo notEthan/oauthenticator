@@ -25,16 +25,40 @@ describe OAuthenticator::SignableRequest do
 
   describe 'initialize' do
     describe 'default attributes' do
-      it('generates nonces') do
-        assert_equal(2, 2.times.map { example_request.protocol_params['oauth_nonce'] }.uniq.compact.size)
+      describe 'with any signature method' do
+        OAuthenticator::SignableRequest::SIGNATURE_METHODS.keys.each do |signature_method|
+          it("defaults to version 1.0 with #{signature_method}") do
+            request = example_request(:signature_method => signature_method)
+            assert_equal('1.0', request.protocol_params['oauth_version'])
+          end
+          it("lets you omit version if you really want to with #{signature_method}") do
+            request = example_request(:version => nil, :signature_method => signature_method)
+            assert(!request.protocol_params.key?('oauth_version'))
+          end
+        end
       end
-      it('defaults to version 1.0') { assert_equal('1.0', example_request.protocol_params['oauth_version']) }
-      it 'lets you omit version if you really want to' do
-        assert(!example_request(:version => nil).protocol_params.key?('oauth_version'))
+      describe 'not plaintext' do
+        it('generates nonces') do
+          nonces = 2.times.map do
+            example_request(:signature_method => 'HMAC-SHA1').protocol_params['oauth_nonce']
+          end
+          assert_equal(2, nonces.uniq.compact.size)
+        end
+        it 'generates timestamp' do
+          Timecop.freeze Time.at 1391021695
+          request = example_request(:signature_method => 'HMAC-SHA1')
+          assert_equal 1391021695.to_s, request.protocol_params['oauth_timestamp']
+        end
       end
-      it 'generates timestamp' do
-        Timecop.freeze Time.at 1391021695
-        assert_equal 1391021695.to_s, example_request.protocol_params['oauth_timestamp']
+      describe 'plaintext' do
+        it('does not generate nonces') do
+          request = example_request(:signature_method => 'PLAINTEXT')
+          assert(!request.protocol_params.key?('oauth_nonce'))
+        end
+        it 'does not generate timestamp' do
+          request = example_request(:signature_method => 'PLAINTEXT')
+          assert(!request.protocol_params.key?('oauth_timestapm'))
+        end
       end
     end
 

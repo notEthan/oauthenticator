@@ -87,10 +87,14 @@ module OAuthenticator
       else
         # defaults
         defaults = {
-          'nonce' => OpenSSL::Random.random_bytes(16).unpack('H*')[0],
-          'timestamp' => Time.now.to_i.to_s,
           'version' => '1.0',
         }
+        if @attributes['signature_method'] != 'PLAINTEXT'
+          defaults.update({
+            'nonce' => OpenSSL::Random.random_bytes(16).unpack('H*')[0],
+            'timestamp' => Time.now.to_i.to_s,
+          })
+        end
         @attributes['authorization'] = PROTOCOL_PARAM_KEYS.map do |key|
           {"oauth_#{key}" => @attributes.key?(key) ? @attributes[key] : defaults[key]}
         end.inject({}, &:update).reject {|k,v| v.nil? }
