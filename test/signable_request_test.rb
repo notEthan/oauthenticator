@@ -273,6 +273,27 @@ Lw03eHTNQghS0A==
     end
   end
 
+  describe 'signed_protocol_params' do
+    it 'includes a signature' do
+      assert_equal 'a%20consumer%20secret&', example_request.signed_protocol_params['oauth_signature']
+    end
+
+    it 'has a different signature than the given authorization if the given authorization is wrong' do
+      request = OAuthenticator::SignableRequest.new(base_example_initialize_attrs.merge(
+        :authorization => {
+          'oauth_consumer_key' => 'a consumer key',
+          'oauth_signature' => 'wrong%20secret&',
+          'oauth_signature_method' => 'PLAINTEXT',
+        },
+        :consumer_secret => 'a consumer secret'
+      ))
+      refute_equal(
+        request.protocol_params['oauth_signature'],
+        request.signed_protocol_params['oauth_signature']
+      )
+    end
+  end
+
   describe 'uri, per section 3.4.1.2' do
     it 'lowercases scheme and host' do
       [
