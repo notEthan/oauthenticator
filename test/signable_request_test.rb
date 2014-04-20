@@ -224,7 +224,8 @@ describe OAuthenticator::SignableRequest do
           :token_secret => 'a token secret',
           :signature_method => 'HMAC-SHA1',
           :nonce => 'a nonce',
-          :timestamp => 1397726597
+          :timestamp => 1397726597,
+          :hash_body? => false
         )
         assert_equal('rVKcy4CgAih1kv4HAMGiNnjmUJk=', request.signed_protocol_params['oauth_signature'])
       end
@@ -238,7 +239,8 @@ describe OAuthenticator::SignableRequest do
           :token_secret => 'a token secret',
           :signature_method => 'RSA-SHA1',
           :nonce => 'a nonce',
-          :timestamp => 1397726597
+          :timestamp => 1397726597,
+          :hash_body? => false
         )
         assert_equal(
           "s3/TkrCJw54tOpsKUHkoQ9PeH1r4wB2fNb70XC2G1ef7Wb/dwwNUOhtjtpGMSDhmYQHzEPt0dAJ+PgeNs1O5NZJQB5JqdsmrhLS3ZdHx2iucxYvZSuDNi0GxaEepz5VS9rg+y5Gmep60BpAKhX0KGnkMY9HIhomTPSrYidAfDOE=",
