@@ -477,6 +477,67 @@ describe OAuthenticator::SignableRequest do
   end
 
   describe 'body hash' do
+    describe 'default inclusion' do
+      it 'includes by default with non-form-encoded and HMAC-SHA1' do
+        request = example_request(:media_type => 'text/plain', :body => 'foo=bar', :signature_method => 'HMAC-SHA1')
+        assert_equal('L7j0ARXdHmlcviPU+Xzlsftpfu4=', request.protocol_params['oauth_body_hash'])
+      end
+      it 'includes by default with non-form-encoded and RSA-SHA1' do
+        request = example_request(:media_type => 'text/plain', :body => 'foo=bar', :signature_method => 'RSA-SHA1', :consumer_secret => rsa_private_key)
+        assert_equal('L7j0ARXdHmlcviPU+Xzlsftpfu4=', request.protocol_params['oauth_body_hash'])
+      end
+      it 'does not include by default with non-form-encoded and PLAINTEXT' do
+        request = example_request(:media_type => 'text/plain', :body => 'foo=bar', :signature_method => 'PLAINTEXT')
+        assert(!request.protocol_params.key?('oauth_body_hash'))
+      end
+      it 'does not include by default with form-encoded and HMAC-SHA1' do
+        request = example_request(:media_type => 'application/x-www-form-urlencoded', :body => 'foo=bar', :signature_method => 'HMAC-SHA1')
+        assert(!request.protocol_params.key?('oauth_body_hash'))
+      end
+      it 'does not include by default with form-encoded and RSA-SHA1' do
+        request = example_request(:media_type => 'application/x-www-form-urlencoded', :body => 'foo=bar', :signature_method => 'RSA-SHA1', :consumer_secret => rsa_private_key)
+        assert(!request.protocol_params.key?('oauth_body_hash'))
+      end
+      it 'does not include by default with form-encoded and PLAINTEXT' do
+        request = example_request(:media_type => 'application/x-www-form-urlencoded', :body => 'foo=bar', :signature_method => 'PLAINTEXT')
+        assert(!request.protocol_params.key?('oauth_body_hash'))
+      end
+    end
+    it 'respects the :hash_body? option' do
+      attributes = {:media_type => 'text/plain', :body => 'foo=bar', :signature_method => 'HMAC-SHA1'}
+      # ensure these would generate the hash by default, without :hash_body?
+      assert_equal('L7j0ARXdHmlcviPU+Xzlsftpfu4=', example_request(attributes).protocol_params['oauth_body_hash'])
+      assert(!example_request(attributes.merge(:hash_body? => false)).protocol_params.key?('oauth_body_hash'))
+      assert_equal('L7j0ARXdHmlcviPU+Xzlsftpfu4=', example_request(attributes.merge(:hash_body? => true)).protocol_params['oauth_body_hash'])
+    end
+    it 'does not generate a body hash when given a authorization' do
+      assert(!example_signed_request({}).protocol_params.key?('oauth_body_hash'))
+    end
+
+    describe '#body_hash' do
+      it 'is the same as goes in protocol params when generated' do
+        request = example_request(:media_type => 'text/plain', :body => 'foo=bar', :signature_method => 'HMAC-SHA1')
+        assert_equal(request.protocol_params['oauth_body_hash'], request.body_hash)
+      end
+      it 'matches the given protocol params for a valid request' do
+        request = example_signed_request(
+          {'oauth_body_hash' => 'Lve95gjOVATpfV8EL5X4nxwjKHE=', 'oauth_signature_method' => 'HMAC-SHA1'},
+          :body => 'Hello World!', :media_type => 'text/plain'
+        )
+        assert_equal(request.protocol_params['oauth_body_hash'], request.body_hash)
+      end
+      it 'is different than the given protocol params for an invalid request' do
+        request = example_signed_request(
+          {'oauth_body_hash' => 'helloooooo?=', 'oauth_signature_method' => 'HMAC-SHA1'},
+          :body => 'Hello World!', :media_type => 'text/plain'
+        )
+        refute_equal(request.protocol_params['oauth_body_hash'], request.body_hash)
+      end
+      it 'returns nil for an unsupported signature method' do
+        assert_equal(nil, example_request(:signature_method => 'PLAINTEXT').body_hash)
+      end
+    end
+
     describe 'example appendix A1' do
       let :request do
         OAuthenticator::SignableRequest.new({
