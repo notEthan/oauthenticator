@@ -107,7 +107,9 @@ module OAuthenticator
 
         # timestamp
         if !timestamp?
-          errors['Authorization oauth_timestamp'] << "is missing"
+          unless signature_method == 'PLAINTEXT'
+            errors['Authorization oauth_timestamp'] << "is missing"
+          end
         elsif timestamp !~ /\A\s*\d+\s*\z/
           errors['Authorization oauth_timestamp'] << "is not an integer - got: #{timestamp}"
         else
@@ -149,7 +151,9 @@ module OAuthenticator
 
         # nonce
         if !nonce?
-          errors['Authorization oauth_nonce'] << "is missing"
+          unless signature_method == 'PLAINTEXT'
+            errors['Authorization oauth_nonce'] << "is missing"
+          end
         elsif nonce_used?
           errors['Authorization oauth_nonce'] << "has already been used"
         end

@@ -214,6 +214,18 @@ describe OAuthenticator::Middleware do
       %q(oauth_version="1.0")
     assert_response(401, /Authorization oauth_timestamp.*is missing/m, *oapp.call(request.env))
   end
+  it 'omits timestamp with PLAINTEXT' do
+    Timecop.travel Time.at 1391021695
+    consumer # cause this to be created
+    request = Rack::Request.new(Rack::MockRequest.env_for('/', :method => 'GET'))
+    request.env['HTTP_AUTHORIZATION'] = %q(OAuth oauth_consumer_key="test_client_app_key", ) +
+      %q(oauth_nonce="c1c2bd8676d44e48691c8dceffa66a96", ) +
+      %q(oauth_signature="test_client_app_secret%26", ) +
+      %q(oauth_signature_method="PLAINTEXT", ) +
+      #%q(oauth_timestamp="1391021695", ) +
+      %q(oauth_version="1.0")
+    assert_response(200, '☺', *oapp.call(request.env))
+  end
   it 'has a non-integer timestamp' do
     Timecop.travel Time.at 1391021695
     consumer # cause this to be created
@@ -342,6 +354,18 @@ describe OAuthenticator::Middleware do
       %q(oauth_timestamp="1391021695", ) +
       %q(oauth_version="1.0")
     assert_response(401, /Authorization oauth_nonce.*is missing/m, *oapp.call(request.env))
+  end
+  it 'omits nonce with PLAINTEXT' do
+    Timecop.travel Time.at 1391021695
+    consumer # cause this to be created
+    request = Rack::Request.new(Rack::MockRequest.env_for('/', :method => 'GET'))
+    request.env['HTTP_AUTHORIZATION'] = %q(OAuth oauth_consumer_key="test_client_app_key", ) +
+      #%q(oauth_nonce="c1c2bd8676d44e48691c8dceffa66a96", ) +
+      %q(oauth_signature="test_client_app_secret%26", ) +
+      %q(oauth_signature_method="PLAINTEXT", ) +
+      %q(oauth_timestamp="1391021695", ) +
+      %q(oauth_version="1.0")
+    assert_response(200, '☺', *oapp.call(request.env))
   end
   it 'has an already-used nonce' do
     Timecop.travel Time.at 1391021695
