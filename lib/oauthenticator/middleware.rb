@@ -21,6 +21,9 @@ module OAuthenticator
     # - `:config_methods` - a Module which defines necessary methods for an {OAuthenticator::SignedRequest} to 
     #   determine if it is validly signed. See documentation for {OAuthenticator::ConfigMethods} 
     #   for details of what this module must implement.
+    #
+    # - `:realm` - 401 responses include a `WWW-Authenticate` with the realm set to the given value. default 
+    #   is an empty string.
     def initialize(app, options={})
       @app=app
       @options = options
@@ -54,7 +57,9 @@ module OAuthenticator
     # is a hash with string keys indicating attributes with errors, and values being arrays of strings 
     # indicating error messages on the attribute key.. 
     def unauthorized_response(error_object)
-      response_headers = {"WWW-Authenticate" => %q(OAuth realm="/"), 'Content-Type' => 'application/json'}
+      # default to a blank realm, I suppose
+      realm = @options[:realm] || ''
+      response_headers = {"WWW-Authenticate" => %Q(OAuth realm="#{realm}"), 'Content-Type' => 'application/json'}
       [401, response_headers, [JSON.pretty_generate(error_object)]]
     end
   end
