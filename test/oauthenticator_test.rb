@@ -448,6 +448,20 @@ describe OAuthenticator::Middleware do
       assert_response(401, /Authorization oauth_body_hash.*must not be included with form-encoded requests/m, *oapp.call(request.env))
     end
 
+    it 'has a body hash with PLAINTEXT' do
+      Timecop.travel Time.at 1391021695
+      consumer # cause this to be created
+      request = Rack::Request.new(Rack::MockRequest.env_for('/', :method => 'PUT', :input => 'hello', 'CONTENT_TYPE' => 'text/plain'))
+      request.env['HTTP_AUTHORIZATION'] = %q(OAuth oauth_consumer_key="test_client_app_key", ) +
+        %q(oauth_nonce="c1c2bd8676d44e48691c8dceffa66a96", ) +
+        %q(oauth_signature="test_client_app_secret%26", ) +
+        %q(oauth_signature_method="PLAINTEXT", ) +
+        %q(oauth_timestamp="1391021695", ) +
+        %q(oauth_version="1.0", ) +
+        %q(oauth_body_hash="qvTGHdzF6KLavt4PO0gs2a6pQ00%3D")
+      assert_response(200, '☺', *oapp.call(request.env))
+    end
+
     describe 'body hash is required' do
       let(:hashrequiredapp) do
         hash_required_config = Module.new do
