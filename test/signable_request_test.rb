@@ -33,22 +33,24 @@ describe OAuthenticator::SignableRequest do
   end
 
   let :rsa_private_key do
-    "-----BEGIN PRIVATE KEY-----
-MIICdgIBADANBgkqhkiG9w0BAQEFAASCAmAwggJcAgEAAoGBALRiMLAh9iimur8V
-A7qVvdqxevEuUkW4K+2KdMXmnQbG9Aa7k7eBjK1S+0LYmVjPKlJGNXHDGuy5Fw/d
-7rjVJ0BLB+ubPK8iA/Tw3hLQgXMRRGRXXCn8ikfuQfjUS1uZSatdLB81mydBETlJ
-hI6GH4twrbDJCR2Bwy/XWXgqgGRzAgMBAAECgYBYWVtleUzavkbrPjy0T5FMou8H
-X9u2AC2ry8vD/l7cqedtwMPp9k7TubgNFo+NGvKsl2ynyprOZR1xjQ7WgrgVB+mm
-uScOM/5HVceFuGRDhYTCObE+y1kxRloNYXnx3ei1zbeYLPCHdhxRYW7T0qcynNmw
-rn05/KO2RLjgQNalsQJBANeA3Q4Nugqy4QBUCEC09SqylT2K9FrrItqL2QKc9v0Z
-zO2uwllCbg0dwpVuYPYXYvikNHHg+aCWF+VXsb9rpPsCQQDWR9TT4ORdzoj+Nccn
-qkMsDmzt0EfNaAOwHOmVJ2RVBspPcxt5iN4HI7HNeG6U5YsFBb+/GZbgfBT3kpNG
-WPTpAkBI+gFhjfJvRw38n3g/+UeAkwMI2TJQS4n8+hid0uus3/zOjDySH3XHCUno
-cn1xOJAyZODBo47E+67R4jV1/gzbAkEAklJaspRPXP877NssM5nAZMU0/O/NGCZ+
-3jPgDUno6WbJn5cqm8MqWhW1xGkImgRk+fkDBquiq4gPiT898jusgQJAd5Zrr6Q8
-AO/0isr/3aa6O6NLQxISLKcPDk2NOccAfS/xOtfOz4sJYM3+Bs4Io9+dZGSDCA54
-Lw03eHTNQghS0A==
------END PRIVATE KEY-----"
+    %q(
+      -----BEGIN PRIVATE KEY-----
+      MIICdgIBADANBgkqhkiG9w0BAQEFAASCAmAwggJcAgEAAoGBALRiMLAh9iimur8V
+      A7qVvdqxevEuUkW4K+2KdMXmnQbG9Aa7k7eBjK1S+0LYmVjPKlJGNXHDGuy5Fw/d
+      7rjVJ0BLB+ubPK8iA/Tw3hLQgXMRRGRXXCn8ikfuQfjUS1uZSatdLB81mydBETlJ
+      hI6GH4twrbDJCR2Bwy/XWXgqgGRzAgMBAAECgYBYWVtleUzavkbrPjy0T5FMou8H
+      X9u2AC2ry8vD/l7cqedtwMPp9k7TubgNFo+NGvKsl2ynyprOZR1xjQ7WgrgVB+mm
+      uScOM/5HVceFuGRDhYTCObE+y1kxRloNYXnx3ei1zbeYLPCHdhxRYW7T0qcynNmw
+      rn05/KO2RLjgQNalsQJBANeA3Q4Nugqy4QBUCEC09SqylT2K9FrrItqL2QKc9v0Z
+      zO2uwllCbg0dwpVuYPYXYvikNHHg+aCWF+VXsb9rpPsCQQDWR9TT4ORdzoj+Nccn
+      qkMsDmzt0EfNaAOwHOmVJ2RVBspPcxt5iN4HI7HNeG6U5YsFBb+/GZbgfBT3kpNG
+      WPTpAkBI+gFhjfJvRw38n3g/+UeAkwMI2TJQS4n8+hid0uus3/zOjDySH3XHCUno
+      cn1xOJAyZODBo47E+67R4jV1/gzbAkEAklJaspRPXP877NssM5nAZMU0/O/NGCZ+
+      3jPgDUno6WbJn5cqm8MqWhW1xGkImgRk+fkDBquiq4gPiT898jusgQJAd5Zrr6Q8
+      AO/0isr/3aa6O6NLQxISLKcPDk2NOccAfS/xOtfOz4sJYM3+Bs4Io9+dZGSDCA54
+      Lw03eHTNQghS0A==
+      -----END PRIVATE KEY-----
+    ).strip.split("\n").map(&:strip).join("\n")
   end
 
   describe 'initialize' do
@@ -91,12 +93,15 @@ Lw03eHTNQghS0A==
     end
 
     it 'accepts string and symbol' do
-      initialize_attr_variants = {
-        :by_string => example_initialize_attrs.map { |k,v| {k.to_s => v} }.inject({}, &:update),
-        :by_symbol => example_initialize_attrs.map { |k,v| {k.to_sym => v} }.inject({}, &:update),
-        :by_random_mix => example_initialize_attrs.map { |k,v| {rand(2) == 0 ? k.to_s : k.to_sym => v} }.inject({}, &:update)
-      }
-      authorizations = initialize_attr_variants.values.map do |attrs|
+      initialize_attr_variants = [
+        # by string
+        example_initialize_attrs.map { |k,v| {k.to_s => v} }.inject({}, &:update),
+        # by symbol
+        example_initialize_attrs.map { |k,v| {k.to_sym => v} }.inject({}, &:update),
+        # random mix
+        example_initialize_attrs.map { |k,v| {rand(2) == 0 ? k.to_s : k.to_sym => v} }.inject({}, &:update),
+      ]
+      authorizations = initialize_attr_variants.map do |attrs|
         OAuthenticator::SignableRequest.new(attrs).authorization
       end
       assert_equal(1, authorizations.uniq.size)
@@ -149,18 +154,22 @@ Lw03eHTNQghS0A==
     end
 
     it 'has the same signature base string' do
-      spec_signature_base = "POST&http%3A%2F%2Fexample.com%2Frequest&a2%3Dr%2520b%26a3%3D2%2520q" +
+      spec_signature_base = (
+        "POST&http%3A%2F%2Fexample.com%2Frequest&a2%3Dr%2520b%26a3%3D2%2520q" +
         "%26a3%3Da%26b5%3D%253D%25253D%26c%2540%3D%26c2%3D%26oauth_consumer_" +
         "key%3D9djdj82h48djs9d2%26oauth_nonce%3D7d8f3e4a%26oauth_signature_m" +
         "ethod%3DHMAC-SHA1%26oauth_timestamp%3D137131201%26oauth_token%3Dkkk" +
         "9d7dh3k39sjv7"
+      )
       assert_equal(spec_signature_base, spec_request.send(:signature_base))
     end
 
     it 'has the same normalized parameters' do
-      spec_normalized_request_params_string = "a2=r%20b&a3=2%20q&a3=a&b5=%3D%253D&c%40=&c2=&oauth_consumer_key=9dj" +
+      spec_normalized_request_params_string = (
+        "a2=r%20b&a3=2%20q&a3=a&b5=%3D%253D&c%40=&c2=&oauth_consumer_key=9dj" +
         "dj82h48djs9d2&oauth_nonce=7d8f3e4a&oauth_signature_method=HMAC-SHA1" +
         "&oauth_timestamp=137131201&oauth_token=kkk9d7dh3k39sjv7"
+      )
       assert_equal(spec_normalized_request_params_string, spec_request.send(:normalized_request_params_string))
 
     end
