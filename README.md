@@ -53,7 +53,7 @@ require 'oauthenticator'
 # - OAuthConsumer
 #   - key
 #   - secret
-# - OAuthAccessToken
+# - OAuthToken
 #   - token
 #   - secret
 #   - consumer_key
@@ -86,16 +86,16 @@ module AwesomeOAuthConfig
     OAuthConsumer.where(:key => consumer_key).first.try(:secret)
   end
 
-  # access token secret, looked up by access token 
-  def access_token_secret
-    OAuthAccessToken.where(:token => token).first.try(:secret)
+  # token secret, looked up by token 
+  def token_secret
+    OAuthToken.where(:token => token).first.try(:secret)
   end
 
-  # whether the access token belongs to the consumer 
-  def access_token_belongs_to_consumer?
-    OAuthAccessToken.where(:token => token).first.try(:consumer_key) == consumer_key
+  # whether the token belongs to the consumer 
+  def token_belongs_to_consumer?
+    OAuthToken.where(:token => token).first.try(:consumer_key) == consumer_key
     # alternately:
-    # OAuthAccessToken.where(:token => token, :consumer_key => consumer_key).any?
+    # OAuthToken.where(:token => token, :consumer_key => consumer_key).any?
   end
 end
 ```
