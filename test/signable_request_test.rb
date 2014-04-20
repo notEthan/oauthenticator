@@ -357,6 +357,101 @@ Lw03eHTNQghS0A==
     assert(example_signed_request(OAuthenticator.parse_authorization(authorization)).send(:signature_base).include?("oauth_foo%3Dbar"))
   end
 
+  describe 'normalized request params' do
+    describe 'normalized request params string' do
+      # this is effectively tested by #authorization so we won't here 
+    end
+    describe 'protocol params' do
+      it 'does not include realm with a new request' do
+        request = example_request(:realm => 'everywhere')
+        assert(!request.send(:normalized_request_params).any? { |k,v| k.downcase == 'realm' })
+      end
+      it 'does not include realm with a previously-signed request' do
+        request = example_signed_request('realm' => 'somewhere')
+        assert(!request.send(:normalized_request_params).any? { |k,v| k.downcase == 'realm' })
+      end
+      it 'does not include signature' do
+        request = example_signed_request('oauth_signature' => 'totallylegit', 'foo' => 'bar')
+        assert(!request.send(:normalized_request_params).any? { |k,v| k.downcase == 'oauth_signature' })
+      end
+      it 'does include all other given params' do
+        request = example_signed_request(
+          'realm' => 'somewhere',
+          'foo' => 'bar',
+          'oauth_signature' => 'totallylegit',
+          'oauth_timestamp' => '137131201'
+        )
+        [['foo', 'bar'], ['oauth_timestamp', '137131201']].each do |pair|
+          assert(request.send(:normalized_request_params).include?(pair))
+        end
+      end
+    end
+    describe 'query params' do
+      it 'goes into normalized request params' do
+        request = example_request(:uri => 'http://example.com/?a=b&c=d&e=&f')
+        [['a', 'b'], ['c', 'd'], ['e', ''], ['f', nil]].each do |pair|
+          assert(request.send(:normalized_request_params).include?(pair))
+        end
+      end
+      it 'is empty with no query' do
+        request = example_request(:uri => 'http://example.com/')
+        assert_equal([], request.send(:query_params))
+      end
+      it 'decodes a + sign' do
+        request = example_request(:uri => 'http://example.com/?a+key=a+value')
+        assert_equal([['a key', 'a value']], request.send(:query_params))
+      end
+      it 'decodes %-encoded' do
+        request = example_request(:uri => 'http://example.com/?a%20key=a%20value')
+        assert_equal([['a key', 'a value']], request.send(:query_params))
+      end
+      it 'includes form encoded keys with an = sign and no value' do
+        request = example_request(:uri => 'http://example.com/?a=')
+        assert_equal([['a', '']], request.send(:query_params))
+      end
+      it 'includes form encoded keys with no = sign and no value' do
+        request = example_request(:uri => 'http://example.com/?a')
+        assert_equal([['a', nil]], request.send(:query_params))
+      end
+    end
+    describe 'entity params' do
+      it 'goes into normalized request params' do
+        request = example_request(:body => 'a=b&c=d&e=&f', :media_type => 'application/x-www-form-urlencoded')
+        [['a', 'b'], ['c', 'd'], ['e', ''], ['f', nil]].each do |pair|
+          assert(request.send(:normalized_request_params).include?(pair))
+        end
+      end
+      it 'includes all form encoded params' do
+        request = example_request(:body => 'a=b&c=d', :media_type => 'application/x-www-form-urlencoded')
+        assert_equal([['a', 'b'], ['c', 'd']], request.send(:entity_params))
+      end
+      it 'includes no non-form encoded params' do
+        request = example_request(:body => 'a=b&c=d', :media_type => 'text/plain')
+        assert_equal([], request.send(:entity_params))
+      end
+      it 'does not parse nested params' do
+        request = example_request(:body => 'a[b]=c', :media_type => 'application/x-www-form-urlencoded')
+        assert_equal([['a[b]', 'c']], request.send(:entity_params))
+      end
+      it 'decodes a + sign' do
+        request = example_request(:body => 'a+key=a+value', :media_type => 'application/x-www-form-urlencoded')
+        assert_equal([['a key', 'a value']], request.send(:entity_params))
+      end
+      it 'decodes %-encoded keys and values' do
+        request = example_request(:body => 'a%20key=a%20value', :media_type => 'application/x-www-form-urlencoded')
+        assert_equal([['a key', 'a value']], request.send(:entity_params))
+      end
+      it 'includes form encoded keys with an = sign and no value' do
+        request = example_request(:body => 'a=', :media_type => 'application/x-www-form-urlencoded')
+        assert_equal([['a', '']], request.send(:entity_params))
+      end
+      it 'includes form encoded keys with no = sign and no value' do
+        request = example_request(:body => 'a', :media_type => 'application/x-www-form-urlencoded')
+        assert_equal([['a', nil]], request.send(:entity_params))
+      end
+    end
+  end
+
   it 'reproduces a successful OAuth example GET (lifted from simple oauth)' do
     request = OAuthenticator::SignableRequest.new(
       :request_method => :get,
