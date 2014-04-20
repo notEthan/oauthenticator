@@ -25,6 +25,13 @@ describe OAuthenticator::SignableRequest do
     end.merge(attributes))
   end
 
+  def example_signed_request(authorization, attributes={})
+    attributes = attributes.merge(:authorization => authorization)
+    OAuthenticator::SignableRequest.new(base_example_initialize_attrs.reject do |k,_|
+      attributes.keys.any? { |ak| ak.to_s == k.to_s }
+    end.merge(attributes))
+  end
+
   let :rsa_private_key do
     "-----BEGIN PRIVATE KEY-----
 MIICdgIBADANBgkqhkiG9w0BAQEFAASCAmAwggJcAgEAAoGBALRiMLAh9iimur8V
@@ -106,7 +113,7 @@ Lw03eHTNQghS0A==
     it 'does not allow protocol parameters to be specified when authorization is specified' do
       OAuthenticator::SignableRequest::PROTOCOL_PARAM_KEYS.map do |key|
         assert_raises(ArgumentError) do
-          OAuthenticator::SignableRequest.new(base_example_initialize_attrs.merge(:authorization => {}, key => 'val'))
+          example_signed_request({}, key => 'val')
         end
       end
     end
@@ -262,14 +269,10 @@ Lw03eHTNQghS0A==
       assert !example_request.protocol_params.key?('oauth_signature')
     end
     it 'does include the signature of a given authorization' do
-      assert_equal('a signature', OAuthenticator::SignableRequest.new(base_example_initialize_attrs.merge(
-        :authorization => {'oauth_signature' => 'a signature'}
-      )).protocol_params['oauth_signature'])
+      assert_equal('a signature', example_signed_request('oauth_signature' => 'a signature').protocol_params['oauth_signature'])
     end
     it 'does include unknown parameters of a given authorization' do
-      assert_equal('bar', OAuthenticator::SignableRequest.new(base_example_initialize_attrs.merge(
-        :authorization => {'foo' => 'bar'}
-      )).protocol_params['foo'])
+      assert_equal('bar', example_signed_request('foo' => 'bar').protocol_params['foo'])
     end
   end
 
@@ -279,14 +282,13 @@ Lw03eHTNQghS0A==
     end
 
     it 'has a different signature than the given authorization if the given authorization is wrong' do
-      request = OAuthenticator::SignableRequest.new(base_example_initialize_attrs.merge(
-        :authorization => {
+      request = example_signed_request({
           'oauth_consumer_key' => 'a consumer key',
           'oauth_signature' => 'wrong%20secret&',
           'oauth_signature_method' => 'PLAINTEXT',
         },
-        :consumer_secret => 'a consumer secret'
-      ))
+        {:consumer_secret => 'a consumer secret'}
+      )
       refute_equal(
         request.protocol_params['oauth_signature'],
         request.signed_protocol_params['oauth_signature']
@@ -352,9 +354,7 @@ Lw03eHTNQghS0A==
       oauth_timestamp="137131201",
       oauth_nonce="7d8f3e4a"
     )
-    assert OAuthenticator::SignableRequest.new(base_example_initialize_attrs.merge(
-      :authorization => OAuthenticator.parse_authorization(authorization)
-    )).send(:signature_base).include?("oauth_foo%3Dbar")
+    assert(example_signed_request(OAuthenticator.parse_authorization(authorization)).send(:signature_base).include?("oauth_foo%3Dbar"))
   end
 
   it 'reproduces a successful OAuth example GET (lifted from simple oauth)' do
