@@ -5,7 +5,7 @@ require 'simplecov'
 require 'byebug'
 
 # NO EXPECTATIONS 
-ENV["MT_NO_EXPECTATIONS"]
+ENV["MT_NO_EXPECTATIONS"] = ''
 
 require 'minitest/autorun'
 require 'minitest/reporters'
