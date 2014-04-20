@@ -453,4 +453,39 @@ describe OAuthenticator::Middleware do
       assert(was_authenticated == true)
     end
   end
+
+  describe 'rack env variables' do
+    let :request do
+      Rack::Request.new(Rack::MockRequest.env_for('/', :method => 'GET')).tap do |request|
+        request.env['HTTP_AUTHORIZATION'] = OAuthenticator::SignableRequest.new({
+          :request_method => request.request_method,
+          :uri => request.url,
+          :media_type => request.media_type,
+          :body => request.body,
+          :signature_method => 'HMAC-SHA1',
+          :consumer_key => consumer_key,
+          :consumer_secret => consumer_secret,
+          :token => token,
+          :token_secret => token_secret,
+        }).authorization
+      end
+    end
+
+    it 'sets oauth.authenticated, oauth.token, oauth.consumer_key' do
+      oauth_authenticated = nil
+      oauth_token = nil
+      oauth_consumer_key = nil
+      testapp = proc do |env|
+        oauth_authenticated = env['oauth.authenticated']
+        oauth_token = env['oauth.token']
+        oauth_consumer_key = env['oauth.consumer_key']
+        [200, {}, ['☺']]
+      end
+      otestapp = OAuthenticator::Middleware.new(testapp, :config_methods => OAuthenticatorTestConfigMethods)
+      assert_response(200, '☺', *otestapp.call(request.env))
+      assert_equal(token, oauth_token)
+      assert_equal(consumer_key, oauth_consumer_key)
+      assert_equal(true, oauth_authenticated)
+    end
+  end
 end
