@@ -1,4 +1,5 @@
-require 'simple_oauth'
+require 'oauthenticator/signable_request'
+require 'oauthenticator/parse_authorization'
 
 module OAuthenticator
   # this class represents an OAuth signed request. its primary user-facing method is {#errors}, which returns 
@@ -26,25 +27,26 @@ module OAuthenticator
       end
     end
 
-    ATTRIBUTE_KEYS = %w(request_method url body media_type authorization).map(&:freeze).freeze
-    OAUTH_ATTRIBUTE_KEYS = %w(consumer_key token timestamp nonce version signature_method signature).map(&:to_sym).freeze
+    # attributes of a SignedRequest
+    ATTRIBUTE_KEYS = %w(request_method uri body media_type authorization).map(&:freeze).freeze
+
+    # oauth attributes parsed from the request authorization
+    OAUTH_ATTRIBUTE_KEYS = (SignableRequest::PROTOCOL_PARAM_KEYS + %w(signature)).freeze
 
     # readers 
     ATTRIBUTE_KEYS.each { |attribute_key| define_method(attribute_key) { @attributes[attribute_key] } }
 
     # readers for oauth header parameters 
-    OAUTH_ATTRIBUTE_KEYS.each { |key| define_method(key) { oauth_header_params[key] } }
+    OAUTH_ATTRIBUTE_KEYS.each { |key| define_method(key) { oauth_header_params["oauth_#{key}"] } }
 
     # question methods to indicate whether oauth header parameters were included with a non-blank value in 
     # the Authorization header
     OAUTH_ATTRIBUTE_KEYS.each do |key|
       define_method("#{key}?") do
-        value = oauth_header_params[key]
+        value = oauth_header_params["oauth_#{key}"]
         value.is_a?(String) ? !value.empty? : !!value
       end
     end
-
-    VALID_SIGNATURE_METHODS = %w(HMAC-SHA1 RSA-SHA1 PLAINTEXT).map(&:freeze).freeze
 
     class << self
       # instantiates a `OAuthenticator::SignedRequest` (subclass thereof, more precisely) representing a 
@@ -57,7 +59,7 @@ module OAuthenticator
       def from_rack_request(request)
         new({
           :request_method => request.request_method,
-          :url => request.url,
+          :uri => request.url,
           :body => request.body,
           :media_type => request.media_type,
           :authorization => request.env['HTTP_AUTHORIZATION'],
@@ -92,22 +94,14 @@ module OAuthenticator
           {'Authorization' => ["Authorization header is missing"]}
         elsif authorization !~ /\S/
           {'Authorization' => ["Authorization header is blank"]}
-        elsif authorization !~ /\Aoauth\s/i
-          {'Authorization' => ["Authorization scheme is not OAuth; received Authorization: #{authorization}"]}
         else
-          to_rescue = SimpleOAuth.const_defined?(:ParseError) ? SimpleOAuth::ParseError : StandardError
           begin
             oauth_header_params
-          rescue to_rescue
+          rescue OAuthenticator::Error
             parse_exception = $!
           end
           if parse_exception
-            if parse_exception.class.name == 'SimpleOAuth::ParseError'
-              message = parse_exception.message
-            else
-              message = "Authorization header is not a properly-formed OAuth 1.0 header."
-            end
-            {'Authorization' => [message]}
+            parse_exception.errors
           else
             errors = Hash.new { |h,k| h[k] = [] }
 
@@ -177,7 +171,8 @@ module OAuthenticator
               errors
             else
               # proceed to check signature
-              if !simple_oauth_header.valid?(secrets)
+              signable_request = SignableRequest.new(@attributes.merge(secrets).merge('authorization' => oauth_header_params))
+              unless self.signature == signable_request.signature
                 {'Authorization oauth_signature' => ['is invalid']}
               else
                 use_nonce!
@@ -196,27 +191,7 @@ module OAuthenticator
 
     # hash of header params. keys should be a subset of OAUTH_ATTRIBUTE_KEYS.
     def oauth_header_params
-      @oauth_header_params ||= SimpleOAuth::Header.parse(authorization)
-    end
-
-    # reads the request body, be it String or IO 
-    def read_body
-      if body.is_a?(String)
-        body
-      elsif body.respond_to?(:read) && body.respond_to?(:rewind)
-        body.rewind
-        body.read.tap do
-          body.rewind
-        end
-      else
-        raise NotImplementedError, "body = #{body.inspect}"
-      end
-    end
-
-    # SimpleOAuth::Header for this request
-    def simple_oauth_header
-      params = media_type == "application/x-www-form-urlencoded" ? CGI.parse(read_body).map{|k,vs| vs.map{|v| [k,v] } }.inject([], &:+) : nil
-      simple_oauth_header = SimpleOAuth::Header.new(request_method, url, params, authorization)
+      @oauth_header_params ||= OAuthenticator.parse_authorization(authorization)
     end
 
     # raise a nice error message for a method that needs to be implemented on a module of config methods 

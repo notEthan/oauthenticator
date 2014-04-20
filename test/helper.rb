@@ -2,8 +2,7 @@ proc { |p| $:.unshift(p) unless $:.any? { |lp| File.expand_path(lp) == p } }.cal
 
 require 'simplecov'
 
-require 'debugger'
-Debugger.start
+require 'byebug'
 
 # NO EXPECTATIONS 
 ENV["MT_NO_EXPECTATIONS"]
@@ -16,3 +15,12 @@ require 'rack/test'
 require 'timecop'
 
 require 'oauthenticator'
+
+class OAuthenticatorConfigSpec < Minitest::Spec
+  after do
+    Timecop.return
+  end
+end
+
+# register this to be the base class for specs instead of Minitest::Spec
+Minitest::Spec.register_spec_type(//, OAuthenticatorConfigSpec)

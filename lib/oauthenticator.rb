@@ -1,6 +1,4 @@
-require "oauthenticator/version"
-
-module OAuthenticator
-  autoload :Middleware, 'oauthenticator/middleware'
-  autoload :SignedRequest, 'oauthenticator/signed_request'
-end
+require 'oauthenticator/version'
+require 'oauthenticator/middleware'
+require 'oauthenticator/signed_request'
+require 'oauthenticator/signable_request'

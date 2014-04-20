@@ -1,9 +1,33 @@
 # OAuthenticator
 
-OAuthenticator authenticates OAuth 1.0 signed requests, primarily as a middleware, and forms useful error 
-messages when authentication fails. 
+OAuthenticator signs outgoing requests with OAuth 1.0. 
 
-## Config Methods module
+OAuthenticator authenticates incoming OAuth 1.0 signed requests, primarily as a middleware, and forms useful 
+error messages when authentication fails. 
+
+## Signing outgoing requests
+
+Generating an Authorization header to apply to an outgoing request is a relatively straightforward affair:
+
+```ruby
+oauthenticator_signable_request = OAuthenticator::SignableRequest.new(
+  :request_method => my_request_method,
+  :uri => my_request_uri,
+  :media_type => my_request_media_type,
+  :body => my_request_body,
+  :signature_method => my_oauth_signature_method,
+  :consumer_key => my_oauth_consumer_key,
+  :consumer_secret => my_oauth_consumer_secret,
+  :token => my_oauth_token,
+  :token_secret => my_oauth_token_secret,
+  :realm => my_authorization_realm
+)
+my_http_request.headers['Authorization'] = oauthenticator_signable_request.authorization
+```
+
+## Authenticating incoming requests
+
+### Config Methods module
 
 There are many ways (infinite, really) in which certain parts of the OAuth spec may be implemented. In order 
 to flexibly accomodate the general case of OAuth authentication, OAuthenticator leaves certain parts of the 
@@ -80,7 +104,7 @@ You may also find it enlightening to peruse `test/oauthenticator_test.rb`. About
 set up some very simple storage in memory, and define a module of config methods which are used through the 
 tests. 
 
-## OAuthenticator::Middleware
+### OAuthenticator::Middleware
 
 The middleware is used by passing the above-mentioned module on the `:config_methods` key to  initialize the 
 middleware:
@@ -95,7 +119,7 @@ run proc { |env| [200, {'Content-Type' => 'text/plain'}, ['access granted!']] }
 The authentication can also be bypassed with a proc on the `:bypass` key; see the documentation for 
 `OAuthenticator::Middleware` for the details of that. 
 
-## OAuthenticator::SignedRequest
+### OAuthenticator::SignedRequest
 
 The OAuthenticator::SignedRequest class may be used independently of the middleware, though it must also be 
 passed your module of config methods to include. It is used like:
@@ -106,16 +130,3 @@ OAuthenticator::SignedRequest.including_config(AwesomeOAuthConfig).new(request_a
 
 See the documentation of OAuthenticator::SignedRequest for how the class is used, once it includes the methods 
 it needs to function. 
-
-# Other
-
-## SimpleOAuth
-
-OAuthenticator uses [SimpleOAuth](https://github.com/laserlemon/simple_oauth) underneath. There is a 
-fork with some improvements that have not yet made it into the main SimpleOAuth repo, and it is recommended 
-to use these for more robust and safe parsing of the Authorization header. This is not published in rubygems, 
-but if you use Bundler, you can use this by using the following line in your `Gemfile`;
-
-```ruby
-gem 'simple_oauth', :git => 'https://github.com/notEthan/simple_oauth.git', :tag => 'ethan-v0.2.0.2'
-```
