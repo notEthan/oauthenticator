@@ -45,7 +45,7 @@ module OAuthenticator
           unauthorized_response({'errors' => oauth_request.errors})
         else
           env["oauth.consumer_key"] = oauth_request.consumer_key
-          env["oauth.access_token"] = oauth_request.token
+          env["oauth.token"] = oauth_request.token
           env["oauth.authenticated"] = true
           @app.call(env)
         end

@@ -137,12 +137,12 @@ module OAuthenticator
           end
         end
 
-        # access token
+        # token
         if token?
-          secrets[:token_secret] = access_token_secret
+          secrets[:token_secret] = token_secret
           if !secrets[:token_secret]
             errors['Authorization oauth_token'] << 'is invalid'
-          elsif !access_token_belongs_to_consumer?
+          elsif !token_belongs_to_consumer?
             errors['Authorization oauth_token'] << 'does not belong to the specified consumer'
           end
         end
