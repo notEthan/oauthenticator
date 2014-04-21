@@ -405,6 +405,126 @@ describe OAuthenticator::Middleware do
     assert_response(401, /Authorization oauth_signature.*is invalid/m, *oapp.call(request.env))
   end
 
+  describe 'oauth_body_hash' do
+    it 'has a valid body hash' do
+      Timecop.travel Time.at 1391021695
+      consumer # cause this to be created
+      request = Rack::Request.new(Rack::MockRequest.env_for('/', :method => 'PUT', :input => 'hello', 'CONTENT_TYPE' => 'text/plain'))
+      request.env['HTTP_AUTHORIZATION'] = %q(OAuth oauth_consumer_key="test_client_app_key", ) +
+        %q(oauth_nonce="c1c2bd8676d44e48691c8dceffa66a96", ) +
+        %q(oauth_signature="RkmgdKV4zUPAlY1%2BkjwPSuCSr%2F8%3D", ) +
+        %q(oauth_signature_method="HMAC-SHA1", ) +
+        %q(oauth_timestamp="1391021695", ) +
+        %q(oauth_version="1.0", ) +
+        %q(oauth_body_hash="qvTGHdzF6KLavt4PO0gs2a6pQ00%3D")
+      assert_response(200, '☺', *oapp.call(request.env))
+    end
+
+    it 'has an incorrect body hash' do
+      Timecop.travel Time.at 1391021695
+      consumer # cause this to be created
+      request = Rack::Request.new(Rack::MockRequest.env_for('/', :method => 'PUT', :input => 'hello', 'CONTENT_TYPE' => 'text/plain'))
+      request.env['HTTP_AUTHORIZATION'] = %q(OAuth oauth_consumer_key="test_client_app_key", ) +
+        %q(oauth_nonce="c1c2bd8676d44e48691c8dceffa66a96", ) +
+        %q(oauth_signature="RkmgdKV4zUPAlY1%2BkjwPSuCSr%2F8%3D", ) +
+        %q(oauth_signature_method="HMAC-SHA1", ) +
+        %q(oauth_timestamp="1391021695", ) +
+        %q(oauth_version="1.0", ) +
+        %q(oauth_body_hash="yes this is authentic")
+      assert_response(401, /Authorization oauth_body_hash.*is invalid/m, *oapp.call(request.env))
+    end
+
+    it 'has a body hash when one is not allowed (even if it is correct)' do
+      Timecop.travel Time.at 1391021695
+      consumer # cause this to be created
+      request = Rack::Request.new(Rack::MockRequest.env_for('/', :method => 'PUT', :input => 'hello', 'CONTENT_TYPE' => 'application/x-www-form-urlencoded'))
+      request.env['HTTP_AUTHORIZATION'] = %q(OAuth oauth_consumer_key="test_client_app_key", ) +
+        %q(oauth_nonce="c1c2bd8676d44e48691c8dceffa66a96", ) +
+        %q(oauth_signature="DG9qcuXaMPMx0fOcVFiUEPdYQnY%3D", ) +
+        %q(oauth_signature_method="HMAC-SHA1", ) +
+        %q(oauth_timestamp="1391021695", ) +
+        %q(oauth_version="1.0", ) +
+        %q(oauth_body_hash="qvTGHdzF6KLavt4PO0gs2a6pQ00%3D")
+      assert_response(401, /Authorization oauth_body_hash.*must not be included with form-encoded requests/m, *oapp.call(request.env))
+    end
+
+    it 'has a body hash with PLAINTEXT' do
+      Timecop.travel Time.at 1391021695
+      consumer # cause this to be created
+      request = Rack::Request.new(Rack::MockRequest.env_for('/', :method => 'PUT', :input => 'hello', 'CONTENT_TYPE' => 'text/plain'))
+      request.env['HTTP_AUTHORIZATION'] = %q(OAuth oauth_consumer_key="test_client_app_key", ) +
+        %q(oauth_nonce="c1c2bd8676d44e48691c8dceffa66a96", ) +
+        %q(oauth_signature="test_client_app_secret%26", ) +
+        %q(oauth_signature_method="PLAINTEXT", ) +
+        %q(oauth_timestamp="1391021695", ) +
+        %q(oauth_version="1.0", ) +
+        %q(oauth_body_hash="qvTGHdzF6KLavt4PO0gs2a6pQ00%3D")
+      assert_response(200, '☺', *oapp.call(request.env))
+    end
+
+    describe 'body hash is required' do
+      let(:hashrequiredapp) do
+        hash_required_config = Module.new do
+          include OAuthenticatorTestConfigMethods
+          define_method(:body_hash_required?) { true }
+        end
+        OAuthenticator::Middleware.new(simpleapp, :config_methods => hash_required_config)
+      end
+
+      it 'is missing a body hash, one is not allowed' do
+        Timecop.travel Time.at 1391021695
+        consumer # cause this to be created
+        request = Rack::Request.new(Rack::MockRequest.env_for('/', :method => 'PUT', :input => 'hello', 'CONTENT_TYPE' => 'application/x-www-form-urlencoded'))
+        request.env['HTTP_AUTHORIZATION'] = %q(OAuth oauth_consumer_key="test_client_app_key", ) +
+          %q(oauth_nonce="c1c2bd8676d44e48691c8dceffa66a96", ) +
+          %q(oauth_signature="DG9qcuXaMPMx0fOcVFiUEPdYQnY%3D", ) +
+          %q(oauth_signature_method="HMAC-SHA1", ) +
+          %q(oauth_timestamp="1391021695", ) +
+          %q(oauth_version="1.0")
+        assert_response(200, '☺', *hashrequiredapp.call(request.env))
+      end
+      it 'is missing a body hash, one is allowed' do
+        Timecop.travel Time.at 1391021695
+        consumer # cause this to be created
+        request = Rack::Request.new(Rack::MockRequest.env_for('/', :method => 'PUT', :input => 'hello', 'CONTENT_TYPE' => 'text/plain'))
+        request.env['HTTP_AUTHORIZATION'] = %q(OAuth oauth_consumer_key="test_client_app_key", ) +
+          %q(oauth_nonce="c1c2bd8676d44e48691c8dceffa66a96", ) +
+          %q(oauth_signature="czC%2F9Z8tE1H4AJaT8lOKLokrWRE%3D", ) +
+          %q(oauth_signature_method="HMAC-SHA1", ) +
+          %q(oauth_timestamp="1391021695", ) +
+          %q(oauth_version="1.0")
+        assert_response(401, /Authorization oauth_body_hash.*is required \(on non-form-encoded requests\)/m, *hashrequiredapp.call(request.env))
+      end
+    end
+
+    describe 'body hash not required' do
+      it 'is missing a body hash, one is not allowed' do
+        Timecop.travel Time.at 1391021695
+        consumer # cause this to be created
+        request = Rack::Request.new(Rack::MockRequest.env_for('/', :method => 'PUT', :input => 'hello', 'CONTENT_TYPE' => 'application/x-www-form-urlencoded'))
+        request.env['HTTP_AUTHORIZATION'] = %q(OAuth oauth_consumer_key="test_client_app_key", ) +
+          %q(oauth_nonce="c1c2bd8676d44e48691c8dceffa66a96", ) +
+          %q(oauth_signature="DG9qcuXaMPMx0fOcVFiUEPdYQnY%3D", ) +
+          %q(oauth_signature_method="HMAC-SHA1", ) +
+          %q(oauth_timestamp="1391021695", ) +
+          %q(oauth_version="1.0")
+        assert_response(200, '☺', *oapp.call(request.env))
+      end
+      it 'is missing a body hash, one is allowed' do
+        Timecop.travel Time.at 1391021695
+        consumer # cause this to be created
+        request = Rack::Request.new(Rack::MockRequest.env_for('/', :method => 'PUT', :input => 'hello', 'CONTENT_TYPE' => 'text/plain'))
+        request.env['HTTP_AUTHORIZATION'] = %q(OAuth oauth_consumer_key="test_client_app_key", ) +
+          %q(oauth_nonce="c1c2bd8676d44e48691c8dceffa66a96", ) +
+          %q(oauth_signature="czC%2F9Z8tE1H4AJaT8lOKLokrWRE%3D", ) +
+          %q(oauth_signature_method="HMAC-SHA1", ) +
+          %q(oauth_timestamp="1391021695", ) +
+          %q(oauth_version="1.0")
+        assert_response(200, '☺', *oapp.call(request.env))
+      end
+    end
+  end
+
   describe :bypass do
     it 'bypasses with invalid request' do
       oapp = OAuthenticator::Middleware.new(simpleapp, :bypass => proc { true }, :config_methods => OAuthenticatorTestConfigMethods)
