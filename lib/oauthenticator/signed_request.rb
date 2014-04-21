@@ -89,98 +89,94 @@ module OAuthenticator
     #
     # @return [nil, Hash<String, Array<String>>] either nil or a hash of errors
     def errors
-      @errors ||= begin
+      return @errors if instance_variables.any? { |ivar| ivar.to_s == '@errors' }
+      @errors = catch(:errors) do
         if authorization.nil?
-          {'Authorization' => ["Authorization header is missing"]}
+          throw(:errors, {'Authorization' => ["Authorization header is missing"]})
         elsif authorization !~ /\S/
-          {'Authorization' => ["Authorization header is blank"]}
+          throw(:errors, {'Authorization' => ["Authorization header is blank"]})
+        end
+
+        begin
+          oauth_header_params
+        rescue OAuthenticator::Error => parse_exception
+          throw(:errors, parse_exception.errors)
+        end
+
+        errors = Hash.new { |h,k| h[k] = [] }
+
+        # timestamp
+        if !timestamp?
+          errors['Authorization oauth_timestamp'] << "is missing"
+        elsif timestamp !~ /\A\s*\d+\s*\z/
+          errors['Authorization oauth_timestamp'] << "is not an integer - got: #{timestamp}"
         else
-          begin
-            oauth_header_params
-          rescue OAuthenticator::Error
-            parse_exception = $!
-          end
-          if parse_exception
-            parse_exception.errors
-          else
-            errors = Hash.new { |h,k| h[k] = [] }
-
-            # timestamp
-            if !timestamp?
-              errors['Authorization oauth_timestamp'] << "is missing"
-            elsif timestamp !~ /\A\s*\d+\s*\z/
-              errors['Authorization oauth_timestamp'] << "is not an integer - got: #{timestamp}"
-            else
-              timestamp_i = timestamp.to_i
-              if timestamp_i < Time.now.to_i - timestamp_valid_past
-                errors['Authorization oauth_timestamp'] << "is too old: #{timestamp}"
-              elsif timestamp_i > Time.now.to_i + timestamp_valid_future
-                errors['Authorization oauth_timestamp'] << "is too far in the future: #{timestamp}"
-              end
-            end
-
-            # oauth version
-            if version? && version != '1.0'
-              errors['Authorization oauth_version'] << "must be 1.0; got: #{version}"
-            end
-
-            # she's filled with secrets
-            secrets = {}
-
-            # consumer / client application
-            if !consumer_key?
-              errors['Authorization oauth_consumer_key'] << "is missing"
-            else
-              secrets[:consumer_secret] = consumer_secret
-              if !secrets[:consumer_secret]
-                errors['Authorization oauth_consumer_key'] << 'is invalid'
-              end
-            end
-
-            # access token
-            if token?
-              secrets[:token_secret] = access_token_secret
-              if !secrets[:token_secret]
-                errors['Authorization oauth_token'] << 'is invalid'
-              elsif !access_token_belongs_to_consumer?
-                errors['Authorization oauth_token'] << 'does not belong to the specified consumer'
-              end
-            end
-
-            # nonce
-            if !nonce?
-              errors['Authorization oauth_nonce'] << "is missing"
-            elsif nonce_used?
-              errors['Authorization oauth_nonce'] << "has already been used"
-            end
-
-            # signature method
-            if !signature_method?
-              errors['Authorization oauth_signature_method'] << "is missing"
-            elsif !allowed_signature_methods.any? { |sm| signature_method.downcase == sm.downcase }
-              errors['Authorization oauth_signature_method'] << "must be one of " +
-                "#{allowed_signature_methods.join(', ')}; got: #{signature_method}"
-            end
-
-            # signature
-            if !signature?
-              errors['Authorization oauth_signature'] << "is missing"
-            end
-
-            if errors.any?
-              errors
-            else
-              # proceed to check signature
-              signable_request = SignableRequest.new(@attributes.merge(secrets).merge('authorization' => oauth_header_params))
-              unless self.signature == signable_request.signature
-                {'Authorization oauth_signature' => ['is invalid']}
-              else
-                use_nonce!
-                nil
-              end
-            end
+          timestamp_i = timestamp.to_i
+          if timestamp_i < Time.now.to_i - timestamp_valid_past
+            errors['Authorization oauth_timestamp'] << "is too old: #{timestamp}"
+          elsif timestamp_i > Time.now.to_i + timestamp_valid_future
+            errors['Authorization oauth_timestamp'] << "is too far in the future: #{timestamp}"
           end
         end
+
+        # oauth version
+        if version? && version != '1.0'
+          errors['Authorization oauth_version'] << "must be 1.0; got: #{version}"
+        end
+
+        # she's filled with secrets
+        secrets = {}
+
+        # consumer / client application
+        if !consumer_key?
+          errors['Authorization oauth_consumer_key'] << "is missing"
+        else
+          secrets[:consumer_secret] = consumer_secret
+          if !secrets[:consumer_secret]
+            errors['Authorization oauth_consumer_key'] << 'is invalid'
+          end
+        end
+
+        # access token
+        if token?
+          secrets[:token_secret] = access_token_secret
+          if !secrets[:token_secret]
+            errors['Authorization oauth_token'] << 'is invalid'
+          elsif !access_token_belongs_to_consumer?
+            errors['Authorization oauth_token'] << 'does not belong to the specified consumer'
+          end
+        end
+
+        # nonce
+        if !nonce?
+          errors['Authorization oauth_nonce'] << "is missing"
+        elsif nonce_used?
+          errors['Authorization oauth_nonce'] << "has already been used"
+        end
+
+        # signature method
+        if !signature_method?
+          errors['Authorization oauth_signature_method'] << "is missing"
+        elsif !allowed_signature_methods.any? { |sm| signature_method.downcase == sm.downcase }
+          errors['Authorization oauth_signature_method'] << "must be one of " +
+            "#{allowed_signature_methods.join(', ')}; got: #{signature_method}"
+        end
+
+        # signature
+        if !signature?
+          errors['Authorization oauth_signature'] << "is missing"
+        end
+
+        throw(:errors, errors) if errors.any?
+
+        # proceed to check signature
+        signable_request = SignableRequest.new(@attributes.merge(secrets).merge('authorization' => oauth_header_params))
+        unless self.signature == signable_request.signature
+          throw(:errors, {'Authorization oauth_signature' => ['is invalid']})
+        end
+
+        use_nonce!
+        nil
       end
     end
 
