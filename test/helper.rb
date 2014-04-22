@@ -16,10 +16,14 @@ require 'timecop'
 
 require 'oauthenticator'
 
+require 'test_config_methods'
+
 class OAuthenticatorConfigSpec < Minitest::Spec
   after do
     Timecop.return
   end
+
+  include TestHelperMethods
 end
 
 # register this to be the base class for specs instead of Minitest::Spec

@@ -116,9 +116,8 @@ module AwesomeOAuthConfig
 end
 ```
 
-You may also find it enlightening to peruse `test/oauthenticator_test.rb`. About the first thing it does is 
-set up some very simple storage in memory, and define a module of config methods which are used through the 
-tests. 
+You may also find it enlightening to peruse `test/test_config_methods.rb`, which sets up some very simple 
+storage in memory, and defines a module of config methods which are used through the tests. 
 
 ### OAuthenticator::Middleware
 
