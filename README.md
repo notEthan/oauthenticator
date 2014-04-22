@@ -5,6 +5,10 @@ OAuthenticator signs outgoing requests with OAuth 1.0.
 OAuthenticator authenticates incoming OAuth 1.0 signed requests, primarily as a middleware, and forms useful 
 error messages when authentication fails. 
 
+Note: The canonical location of this README is on [RubyDoc](http://rubydoc.info/gems/oauthenticator/). When 
+viewed on [Github](https://github.com/notEthan/oauthenticator/), it may be inconsistent with the latest 
+released gem, and Yardoc links will not work.
+
 ## Signing outgoing requests
 
 ### Faraday
