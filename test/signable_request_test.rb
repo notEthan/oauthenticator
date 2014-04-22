@@ -374,6 +374,10 @@ describe OAuthenticator::SignableRequest do
       assert(example_request(:media_type => 'application/x-www-form-urlencoded', :body => 'foo=bar').send(:signature_base).include?('foo'))
     end
 
+    it 'does include body in a formencoded request with alternate capitalization' do
+      assert(example_request(:media_type => 'APPLICATION/X-WWW-FORM-URLENCODED', :body => 'foo=bar').send(:signature_base).include?('foo'))
+    end
+
     it 'does not include body in a non-formencoded request' do
       assert(!example_request(:media_type => 'text/plain', :body => 'foo=bar').send(:signature_base).include?('foo'))
     end
