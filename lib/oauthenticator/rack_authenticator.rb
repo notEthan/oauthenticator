@@ -21,6 +21,8 @@ module OAuthenticator
     #   determine if it is validly signed. See documentation for {OAuthenticator::ConfigMethods} 
     #   for details of what this module must implement.
     #
+    # - `:logger` - a Logger instance to which OAuthenticator::RackAuthenticator will log informative messages 
+    #
     # - `:realm` - 401 responses include a `WWW-Authenticate` with the realm set to the given value. default 
     #   is an empty string.
     def initialize(app, options={})
@@ -42,8 +44,10 @@ module OAuthenticator
         oauth_signed_request_class = OAuthenticator::SignedRequest.including_config(@options[:config_methods])
         oauth_request = oauth_signed_request_class.from_rack_request(request)
         if oauth_request.errors
+          log_unauthenticated(env, oauth_request)
           unauthenticated_response({'errors' => oauth_request.errors})
         else
+          log_success(env, oauth_request)
           env["oauth.consumer_key"] = oauth_request.consumer_key
           env["oauth.token"] = oauth_request.token
           env["oauth.authenticated"] = true
@@ -51,6 +55,8 @@ module OAuthenticator
         end
       end
     end
+
+    private
 
     # the response for an unauthenticated request. the argument will be a hash with the key 'errors', whose 
     # value is a hash with string keys indicating attributes with errors, and values being arrays of strings 
@@ -60,6 +66,24 @@ module OAuthenticator
       realm = @options[:realm] || ''
       response_headers = {"WWW-Authenticate" => %Q(OAuth realm="#{realm}"), 'Content-Type' => 'application/json'}
       [401, response_headers, [JSON.pretty_generate(error_object)]]
+    end
+
+    # write a log entry regarding an unauthenticated request
+    def log_unauthenticated(env, oauth_request)
+      log :warn, "OAuthenticator rejected a request:\n" +
+        "\tAuthorization: #{env['HTTP_AUTHORIZATION']}\n" +
+        "\tErrors: #{JSON.generate(oauth_request.errors)}"
+    end
+
+    # write a log entry for a successfully authenticated request
+    def log_success(env, oauth_request)
+      log :info, "OAuthenticator authenticated an authentic request with Authorization: #{env['HTTP_AUTHORIZATION']}"
+    end
+
+    def log(level, message)
+      if @options[:logger]
+        @options[:logger].send(level, message)
+      end
     end
   end
 end
