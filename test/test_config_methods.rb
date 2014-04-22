@@ -46,7 +46,7 @@ module TestHelperMethods
   end
 
   let(:simpleapp) { proc { |env| [200, {'Content-Type' => 'text/plain; charset=UTF-8'}, ['☺']] } }
-  let(:oapp) { OAuthenticator::Middleware.new(simpleapp, :config_methods => OAuthenticatorTestConfigMethods) }
+  let(:oapp) { OAuthenticator::RackAuthenticator.new(simpleapp, :config_methods => OAuthenticatorTestConfigMethods) }
 
   let(:consumer) do
     {:key => "test_client_app_key", :secret => "test_client_app_secret"}.tap do |consumer|
