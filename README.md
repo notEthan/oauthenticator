@@ -65,6 +65,8 @@ oauthenticator_signable_request = OAuthenticator::SignableRequest.new(
 my_http_request.headers['Authorization'] = oauthenticator_signable_request.authorization
 ```
 
+See the documentation for {OAuthenticator::SignableRequest} for more detailed information.
+
 ### OAuth Request Body Hash
 
 The [OAuth Request Body Hash](https://oauth.googlecode.com/svn/spec/ext/body_hash/1.0/oauth-bodyhash.html)
@@ -85,7 +87,7 @@ implementation up to the user. The user configures this by creating a module imp
 which will be passed to OAuthenticator.
 
 For more information on the details of the methods which must or may be implemented, please see the 
-documentation for the module `OAuthenticator::ConfigMethods`, which defines stub methods for 
+documentation for the module {OAuthenticator::ConfigMethods}, which defines stub methods for 
 each recognized method, with method documentation relating to your implementation.
 
 A simple, contrived example follows, which approximately resembles what you might implement. It is not useful 
@@ -171,7 +173,7 @@ run proc { |env| [200, {'Content-Type' => 'text/plain'}, ['access granted!']] }
 ```
 
 The authentication can also be bypassed with a proc on the `:bypass` key; see the documentation for 
-`OAuthenticator::RackAuthenticator` for the details of that. 
+{OAuthenticator::RackAuthenticator} for the details of that. 
 
 ### OAuthenticator::SignedRequest
 
@@ -182,8 +184,8 @@ it must also be passed your module of config methods to include. It is used like
 OAuthenticator::SignedRequest.including_config(AwesomeOAuthConfig).new(request_attrs)
 ```
 
-See the documentation of OAuthenticator::SignedRequest for how the class is used, once it includes the methods 
-it needs to function. 
+See the documentation of {OAuthenticator::SignedRequest} for how the class is used, once it includes the 
+methods it needs to function. 
 
 ### OAuth Request Body Hash
 
