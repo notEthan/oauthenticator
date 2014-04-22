@@ -143,7 +143,10 @@ module OAuthenticator
     #
     # @return [Boolean]
     def form_encoded?
-      @attributes['media_type'] == "application/x-www-form-urlencoded"
+      media_type = @attributes['media_type']
+      # media tye is case insensitive per http://www.w3.org/Protocols/rfc2616/rfc2616-sec3.html#sec3.7
+      media_type = media_type.downcase if media_type.is_a?(String)
+      media_type == "application/x-www-form-urlencoded"
     end
 
     private
