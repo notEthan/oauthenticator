@@ -84,11 +84,11 @@ module OAuthenticator
       config_method_not_implemented
     end
 
-    # this should look up the access token secret in your application's storage corresponding to the request's 
-    # access token, which is available via the `#token` method. see the README for an example implementation.
+    # this should look up the token secret in your application's storage corresponding to the request's 
+    # token, which is available via the `#token` method. see the README for an example implementation.
     #
-    # @return [String] the access token secret for the request's access token
-    def access_token_secret
+    # @return [String] the token secret for the request's token
+    def token_secret
       config_method_not_implemented
     end
 
@@ -111,15 +111,31 @@ module OAuthenticator
       config_method_not_implemented
     end
 
-    # whether the access token indicated by the request (via `#token`) belongs to the consumer indicated by 
+    # whether the token indicated by the request (via `#token`) belongs to the consumer indicated by 
     # the request (via `#consumer_key`). 
     #
-    # this method may simply return true if the implementation does not care to restrict access tokens by 
+    # this method may simply return true if the implementation does not care to restrict tokens by 
     # consumer. 
     #
-    # @return [Boolean] whether the request's access token belongs to the request's consumer 
-    def access_token_belongs_to_consumer?
+    # @return [Boolean] whether the request's token belongs to the request's consumer 
+    def token_belongs_to_consumer?
       config_method_not_implemented
+    end
+
+    # whether the request will be considered valid if it is missing the oauth_body_hash parameter, when that 
+    # parameter is allowed. if you require requests to include the oauth_body_hash parameter, return true 
+    # here. 
+    #
+    # the default for this method is false, since the oauth body hash is not widely implemented. 
+    #
+    # this only applies to requests which are NOT form encoded - requests which are form-encoded must never 
+    # have the oauth_body_hash parameter regardless of this setting and will be rejected as inauthentic, per 
+    # the OAuth Request Body Hash spec. this also does not apply to requests with a signature method which 
+    # does not have a corresponding body hash method - i.e., the PLAINTEXT signature method.
+    #
+    # @return [Boolean] whether body hash is required
+    def body_hash_required?
+      false
     end
   end
 end

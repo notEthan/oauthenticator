@@ -3,7 +3,7 @@ proc { |p| $:.unshift(p) unless $:.any? { |lp| File.expand_path(lp) == p } }.cal
 require 'helper'
 
 describe OAuthenticator::SignedRequest do
-  %w(timestamp_valid_period consumer_secret access_token_secret nonce_used? use_nonce! access_token_belongs_to_consumer?).each do |method_without_default|
+  %w(timestamp_valid_period consumer_secret token_secret nonce_used? use_nonce! token_belongs_to_consumer?).each do |method_without_default|
     it "complains when #{method_without_default} is not implemented" do
       exc = assert_raises(NotImplementedError) do
         OAuthenticator::SignedRequest.new({}).public_send(method_without_default)
@@ -37,5 +37,8 @@ describe OAuthenticator::SignedRequest do
   end
   it 'uses the default value for allowed signature methods' do
     assert_equal %w(RSA-SHA1 HMAC-SHA1 PLAINTEXT), OAuthenticator::SignedRequest.new({}).allowed_signature_methods
+  end
+  it 'uses default value for body_hash_required?' do
+    assert_equal false, OAuthenticator::SignedRequest.new({}).body_hash_required?
   end
 end

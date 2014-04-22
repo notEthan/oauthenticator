@@ -31,7 +31,7 @@ module OAuthenticator
     ATTRIBUTE_KEYS = %w(request_method uri body media_type authorization).map(&:freeze).freeze
 
     # oauth attributes parsed from the request authorization
-    OAUTH_ATTRIBUTE_KEYS = (SignableRequest::PROTOCOL_PARAM_KEYS + %w(signature)).freeze
+    OAUTH_ATTRIBUTE_KEYS = (SignableRequest::PROTOCOL_PARAM_KEYS + %w(signature body_hash)).freeze
 
     # readers 
     ATTRIBUTE_KEYS.each { |attribute_key| define_method(attribute_key) { @attributes[attribute_key] } }
@@ -107,7 +107,9 @@ module OAuthenticator
 
         # timestamp
         if !timestamp?
-          errors['Authorization oauth_timestamp'] << "is missing"
+          unless signature_method == 'PLAINTEXT'
+            errors['Authorization oauth_timestamp'] << "is missing"
+          end
         elsif timestamp !~ /\A\s*\d+\s*\z/
           errors['Authorization oauth_timestamp'] << "is not an integer - got: #{timestamp}"
         else
@@ -137,19 +139,21 @@ module OAuthenticator
           end
         end
 
-        # access token
+        # token
         if token?
-          secrets[:token_secret] = access_token_secret
+          secrets[:token_secret] = token_secret
           if !secrets[:token_secret]
             errors['Authorization oauth_token'] << 'is invalid'
-          elsif !access_token_belongs_to_consumer?
+          elsif !token_belongs_to_consumer?
             errors['Authorization oauth_token'] << 'does not belong to the specified consumer'
           end
         end
 
         # nonce
         if !nonce?
-          errors['Authorization oauth_nonce'] << "is missing"
+          unless signature_method == 'PLAINTEXT'
+            errors['Authorization oauth_nonce'] << "is missing"
+          end
         elsif nonce_used?
           errors['Authorization oauth_nonce'] << "has already been used"
         end
@@ -167,10 +171,46 @@ module OAuthenticator
           errors['Authorization oauth_signature'] << "is missing"
         end
 
+        signable_request = SignableRequest.new(@attributes.merge(secrets).merge('authorization' => oauth_header_params))
+
+        # body hash
+
+        # present?
+        if body_hash?
+          # allowed?
+          if !signable_request.form_encoded?
+            # applicable?
+            if SignableRequest::BODY_HASH_METHODS.key?(signature_method)
+              # correct?
+              if body_hash == signable_request.body_hash
+                # all good
+              else
+                errors['Authorization oauth_body_hash'] << "is invalid"
+              end
+            else
+              # received a body hash with plaintext. weird situation - we will ignore it; signature will not 
+              # be verified but it will be a part of the signature. 
+            end
+          else
+            errors['Authorization oauth_body_hash'] << "must not be included with form-encoded requests"
+          end
+        else
+          # allowed?
+          if !signable_request.form_encoded?
+            # required?
+            if body_hash_required?
+              errors['Authorization oauth_body_hash'] << "is required (on non-form-encoded requests)"
+            else
+              # okay - not supported by client, but allowed
+            end
+          else
+            # all good
+          end
+        end
+
         throw(:errors, errors) if errors.any?
 
         # proceed to check signature
-        signable_request = SignableRequest.new(@attributes.merge(secrets).merge('authorization' => oauth_header_params))
         unless self.signature == signable_request.signature
           throw(:errors, {'Authorization oauth_signature' => ['is invalid']})
         end

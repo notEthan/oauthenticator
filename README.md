@@ -20,10 +20,21 @@ oauthenticator_signable_request = OAuthenticator::SignableRequest.new(
   :consumer_secret => my_oauth_consumer_secret,
   :token => my_oauth_token,
   :token_secret => my_oauth_token_secret,
-  :realm => my_authorization_realm
+  :realm => my_authorization_realm,
+  :hash_body? => my_body_hashing_requirement
 )
 my_http_request.headers['Authorization'] = oauthenticator_signable_request.authorization
 ```
+
+### OAuth Request Body Hash
+
+The [OAuth Request Body Hash](https://oauth.googlecode.com/svn/spec/ext/body_hash/1.0/oauth-bodyhash.html)
+specification is supported. By default all signing of outgoing does include the body hash. This can be 
+disabled by setting the `:hash_body?` / `'hash_body?'` attribute to false when instantiating an 
+OAuthenticator::SignableRequest. 
+
+For info on when to include the body hash, see 
+[When to Include the Body Hash](https://oauth.googlecode.com/svn/spec/ext/body_hash/1.0/oauth-bodyhash.html#when_to_include). 
 
 ## Authenticating incoming requests
 
@@ -53,7 +64,7 @@ require 'oauthenticator'
 # - OAuthConsumer
 #   - key
 #   - secret
-# - OAuthAccessToken
+# - OAuthToken
 #   - token
 #   - secret
 #   - consumer_key
@@ -86,16 +97,21 @@ module AwesomeOAuthConfig
     OAuthConsumer.where(:key => consumer_key).first.try(:secret)
   end
 
-  # access token secret, looked up by access token 
-  def access_token_secret
-    OAuthAccessToken.where(:token => token).first.try(:secret)
+  # token secret, looked up by token 
+  def token_secret
+    OAuthToken.where(:token => token).first.try(:secret)
   end
 
-  # whether the access token belongs to the consumer 
-  def access_token_belongs_to_consumer?
-    OAuthAccessToken.where(:token => token).first.try(:consumer_key) == consumer_key
+  # whether the token belongs to the consumer 
+  def token_belongs_to_consumer?
+    OAuthToken.where(:token => token).first.try(:consumer_key) == consumer_key
     # alternately:
-    # OAuthAccessToken.where(:token => token, :consumer_key => consumer_key).any?
+    # OAuthToken.where(:token => token, :consumer_key => consumer_key).any?
+  end
+
+  # whether oauth_body_hash_is_required (this method defaults to false and may be omitted)
+  def body_hash_required?
+    false
   end
 end
 ```
@@ -130,3 +146,15 @@ OAuthenticator::SignedRequest.including_config(AwesomeOAuthConfig).new(request_a
 
 See the documentation of OAuthenticator::SignedRequest for how the class is used, once it includes the methods 
 it needs to function. 
+
+### OAuth Request Body Hash
+
+The [OAuth Request Body Hash](https://oauth.googlecode.com/svn/spec/ext/body_hash/1.0/oauth-bodyhash.html)
+specification is supported. Requests which include the oauth_body_hash parameter are authenticated according 
+to the spec. 
+
+Requests which may include the oauth_body_hash parameter but do not are accepted or rejected based on the 
+config method `#body_hash_required?` - if the implementation indicates that oauth_body_hash is required, then 
+the request is rejected as inauthentic; if it is not required then the request is allowed (assuming all other 
+aspects of the OAuth signature are authentic.) 
+

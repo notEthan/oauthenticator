@@ -36,6 +36,8 @@ module OAuthenticator
     # - media_type (required) - the request media type (may be nil if there is no body). note that this may be 
     #   different than the Content-Type header; other components of that such as encoding must not be included.
     # - body (required) - the request body. may be a String or an IO, or nil if no body is present.
+    # - hash_body? - whether to add the oauth_body_hash parameter, per the OAuth Request Body Hash 
+    #   specification. defaults to true. not used if the 'authorization' parameter is used.
     # - signature_method (required*) - oauth signature method (String)
     # - consumer_key (required*) - oauth consumer key (String)
     # - consumer_secret (required*) - oauth consumer secret (String)
@@ -68,7 +70,8 @@ module OAuthenticator
       required += %w(signature_method consumer_key) unless @attributes['authorization']
       missing = required - @attributes.keys
       raise ArgumentError, "missing: #{missing.inspect}" if missing.any?
-      extra = @attributes.keys - (required + PROTOCOL_PARAM_KEYS + %w(authorization consumer_secret token_secret realm))
+      other_recognized = PROTOCOL_PARAM_KEYS + %w(authorization consumer_secret token_secret realm hash_body?)
+      extra = @attributes.keys - (required + other_recognized)
       raise ArgumentError, "received unrecognized @attributes: #{extra.inspect}" if extra.any?
 
       if @attributes['authorization']
@@ -99,6 +102,8 @@ module OAuthenticator
           {"oauth_#{key}" => @attributes.key?(key) ? @attributes[key] : defaults[key]}
         end.inject({}, &:update).reject {|k,v| v.nil? }
         @attributes['authorization']['realm'] = @attributes['realm'] unless @attributes['realm'].nil?
+
+        hash_body
       end
     end
 
@@ -116,6 +121,14 @@ module OAuthenticator
       rbmethod = SIGNATURE_METHODS[signature_method] ||
         raise(ArgumentError, "invalid signature method: #{signature_method}")
       rbmethod.bind(self).call
+    end
+
+    # the oauth_body_hash calculated for this request, if applicable, per the OAuth Request Body Hash 
+    # specification.
+    #
+    # @return [String, nil] oauth body hash
+    def body_hash
+      BODY_HASH_METHODS[signature_method] ? BODY_HASH_METHODS[signature_method].bind(self).call : nil
     end
 
     # protocol params for this request as described in section 3.4.1.3 
@@ -254,6 +267,24 @@ module OAuthenticator
       end
     end
 
+    # set the oauth_body_hash to the hash of the request body 
+    #
+    # @return [Void]
+    def hash_body
+      if hash_body?
+        @attributes['authorization']['oauth_body_hash'] = body_hash
+      end
+    end
+
+    # whether we will hash the body, per oauth request body hash section 4.1, as well as whether the caller 
+    # said to 
+    #
+    # @return [Boolean]
+    def hash_body?
+      BODY_HASH_METHODS[signature_method] && !form_encoded? &&
+        (@attributes.key?('hash_body?') ? @attributes['hash_body?'] : true)
+    end
+
     # signature method 
     #
     # @return [String]
@@ -285,11 +316,25 @@ module OAuthenticator
       @attributes.values_at('consumer_secret', 'token_secret').map { |v| OAuthenticator.escape(v) }.join('&')
     end
 
+    # body hash, with a signature method which uses SHA1. oauth request body hash section 3.2
+    #
+    # @return [String]
+    def sha1_body_hash
+      Base64.encode64(OpenSSL::Digest::SHA1.digest(read_body)).chomp.gsub(/\n/, '')
+    end
+
     # map of oauth signature methods to their signature instance methods on this class 
     SIGNATURE_METHODS = {
       'RSA-SHA1'.freeze => instance_method(:rsa_sha1_signature),
       'HMAC-SHA1'.freeze => instance_method(:hmac_sha1_signature),
       'PLAINTEXT'.freeze => instance_method(:plaintext_signature),
+    }.freeze
+
+    # map of oauth signature methods to their body hash instance methods on this class. oauth request body 
+    # hash section 3.1
+    BODY_HASH_METHODS = {
+      'RSA-SHA1'.freeze => instance_method(:sha1_body_hash),
+      'HMAC-SHA1'.freeze => instance_method(:sha1_body_hash),
     }.freeze
   end
 end

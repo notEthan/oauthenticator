@@ -224,7 +224,8 @@ describe OAuthenticator::SignableRequest do
           :token_secret => 'a token secret',
           :signature_method => 'HMAC-SHA1',
           :nonce => 'a nonce',
-          :timestamp => 1397726597
+          :timestamp => 1397726597,
+          :hash_body? => false
         )
         assert_equal('rVKcy4CgAih1kv4HAMGiNnjmUJk=', request.signed_protocol_params['oauth_signature'])
       end
@@ -238,7 +239,8 @@ describe OAuthenticator::SignableRequest do
           :token_secret => 'a token secret',
           :signature_method => 'RSA-SHA1',
           :nonce => 'a nonce',
-          :timestamp => 1397726597
+          :timestamp => 1397726597,
+          :hash_body? => false
         )
         assert_equal(
           "s3/TkrCJw54tOpsKUHkoQ9PeH1r4wB2fNb70XC2G1ef7Wb/dwwNUOhtjtpGMSDhmYQHzEPt0dAJ+PgeNs1O5NZJQB5JqdsmrhLS3ZdHx2iucxYvZSuDNi0GxaEepz5VS9rg+y5Gmep60BpAKhX0KGnkMY9HIhomTPSrYidAfDOE=",
@@ -474,6 +476,126 @@ describe OAuthenticator::SignableRequest do
       it 'includes form encoded keys with no = sign and no value' do
         request = example_request(:body => 'a', :media_type => 'application/x-www-form-urlencoded')
         assert_equal([['a', nil]], request.send(:entity_params))
+      end
+    end
+  end
+
+  describe 'body hash' do
+    describe 'default inclusion' do
+      it 'includes by default with non-form-encoded and HMAC-SHA1' do
+        request = example_request(:media_type => 'text/plain', :body => 'foo=bar', :signature_method => 'HMAC-SHA1')
+        assert_equal('L7j0ARXdHmlcviPU+Xzlsftpfu4=', request.protocol_params['oauth_body_hash'])
+      end
+      it 'includes by default with non-form-encoded and RSA-SHA1' do
+        request = example_request(:media_type => 'text/plain', :body => 'foo=bar', :signature_method => 'RSA-SHA1', :consumer_secret => rsa_private_key)
+        assert_equal('L7j0ARXdHmlcviPU+Xzlsftpfu4=', request.protocol_params['oauth_body_hash'])
+      end
+      it 'does not include by default with non-form-encoded and PLAINTEXT' do
+        request = example_request(:media_type => 'text/plain', :body => 'foo=bar', :signature_method => 'PLAINTEXT')
+        assert(!request.protocol_params.key?('oauth_body_hash'))
+      end
+      it 'does not include by default with form-encoded and HMAC-SHA1' do
+        request = example_request(:media_type => 'application/x-www-form-urlencoded', :body => 'foo=bar', :signature_method => 'HMAC-SHA1')
+        assert(!request.protocol_params.key?('oauth_body_hash'))
+      end
+      it 'does not include by default with form-encoded and RSA-SHA1' do
+        request = example_request(:media_type => 'application/x-www-form-urlencoded', :body => 'foo=bar', :signature_method => 'RSA-SHA1', :consumer_secret => rsa_private_key)
+        assert(!request.protocol_params.key?('oauth_body_hash'))
+      end
+      it 'does not include by default with form-encoded and PLAINTEXT' do
+        request = example_request(:media_type => 'application/x-www-form-urlencoded', :body => 'foo=bar', :signature_method => 'PLAINTEXT')
+        assert(!request.protocol_params.key?('oauth_body_hash'))
+      end
+    end
+    it 'respects the :hash_body? option' do
+      attributes = {:media_type => 'text/plain', :body => 'foo=bar', :signature_method => 'HMAC-SHA1'}
+      # ensure these would generate the hash by default, without :hash_body?
+      assert_equal('L7j0ARXdHmlcviPU+Xzlsftpfu4=', example_request(attributes).protocol_params['oauth_body_hash'])
+      assert(!example_request(attributes.merge(:hash_body? => false)).protocol_params.key?('oauth_body_hash'))
+      assert_equal('L7j0ARXdHmlcviPU+Xzlsftpfu4=', example_request(attributes.merge(:hash_body? => true)).protocol_params['oauth_body_hash'])
+    end
+    it 'does not generate a body hash when given a authorization' do
+      assert(!example_signed_request({}).protocol_params.key?('oauth_body_hash'))
+    end
+
+    describe '#body_hash' do
+      it 'is the same as goes in protocol params when generated' do
+        request = example_request(:media_type => 'text/plain', :body => 'foo=bar', :signature_method => 'HMAC-SHA1')
+        assert_equal(request.protocol_params['oauth_body_hash'], request.body_hash)
+      end
+      it 'matches the given protocol params for a valid request' do
+        request = example_signed_request(
+          {'oauth_body_hash' => 'Lve95gjOVATpfV8EL5X4nxwjKHE=', 'oauth_signature_method' => 'HMAC-SHA1'},
+          :body => 'Hello World!', :media_type => 'text/plain'
+        )
+        assert_equal(request.protocol_params['oauth_body_hash'], request.body_hash)
+      end
+      it 'is different than the given protocol params for an invalid request' do
+        request = example_signed_request(
+          {'oauth_body_hash' => 'helloooooo?=', 'oauth_signature_method' => 'HMAC-SHA1'},
+          :body => 'Hello World!', :media_type => 'text/plain'
+        )
+        refute_equal(request.protocol_params['oauth_body_hash'], request.body_hash)
+      end
+      it 'returns nil for an unsupported signature method' do
+        assert_equal(nil, example_request(:signature_method => 'PLAINTEXT').body_hash)
+      end
+    end
+
+    describe 'example appendix A1' do
+      let :request do
+        OAuthenticator::SignableRequest.new({
+          :request_method => 'PUT',
+          :uri => 'http://www.example.com/resource',
+          :media_type => 'text/plain',
+          :body => 'Hello World!',
+          :signature_method => 'HMAC-SHA1',
+          :token => "token",
+          :consumer_key => "consumer",
+          :timestamp => "1236874236",
+          :nonce => "10369470270925",
+        })
+      end
+      it 'has the same oauth body hash' do
+        assert_equal('Lve95gjOVATpfV8EL5X4nxwjKHE=', request.signed_protocol_params['oauth_body_hash'])
+      end
+      it 'has the same signature base' do
+        assert_equal(
+          %q(PUT&http%3A%2F%2Fwww.example.com%2Fresource&oauth_body_hash%3D) +
+          %q(Lve95gjOVATpfV8EL5X4nxwjKHE%253D%26oauth_consumer_key%3Dconsum) +
+          %q(er%26oauth_nonce%3D10369470270925%26oauth_signature_method%3DH) +
+          %q(MAC-SHA1%26oauth_timestamp%3D1236874236%26oauth_token%3Dtoken%) +
+          %q(26oauth_version%3D1.0),
+          request.send(:signature_base)
+        )
+      end
+    end
+    describe 'example appendix A2' do
+      let :request do
+        OAuthenticator::SignableRequest.new({
+          :request_method => 'GET',
+          :uri => 'http://www.example.com/resource',
+          :media_type => nil,
+          :body => nil,
+          :signature_method => 'HMAC-SHA1',
+          :token => "token",
+          :consumer_key => "consumer",
+          :timestamp => "1238395022",
+          :nonce => "8628868109991",
+        })
+      end
+      it 'has the same oauth body hash' do
+        assert_equal('2jmj7l5rSw0yVb/vlWAYkK/YBwk=', request.signed_protocol_params['oauth_body_hash'])
+      end
+      it 'has the same signature base' do
+        assert_equal(
+          %q(GET&http%3A%2F%2Fwww.example.com%2Fresource&oauth_body_hash%3D2jmj7) +
+          %q(l5rSw0yVb%252FvlWAYkK%252FYBwk%253D%26oauth_consumer_key%3Dconsumer) +
+          %q(%26oauth_nonce%3D8628868109991%26oauth_signature_method%3DHMAC-SHA1) +
+          %q(%26oauth_timestamp%3D1238395022%26oauth_token%3Dtoken%26oauth_versi) +
+          %q(on%3D1.0),
+          request.send(:signature_base)
+        )
       end
     end
   end
