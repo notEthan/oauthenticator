@@ -2,7 +2,7 @@
 proc { |p| $:.unshift(p) unless $:.any? { |lp| File.expand_path(lp) == p } }.call(File.expand_path('.', File.dirname(__FILE__)))
 require 'helper'
 
-describe OAuthenticator::Middleware do
+describe OAuthenticator::RackAuthenticator do
   # act like a database cleaner
   after do
     [:nonces, :consumer_secrets, :token_secrets, :token_consumers].each do |db|
@@ -430,7 +430,7 @@ describe OAuthenticator::Middleware do
           include OAuthenticatorTestConfigMethods
           define_method(:body_hash_required?) { true }
         end
-        OAuthenticator::Middleware.new(simpleapp, :config_methods => hash_required_config)
+        OAuthenticator::RackAuthenticator.new(simpleapp, :config_methods => hash_required_config)
       end
 
       it 'is missing a body hash, one is not allowed' do
@@ -489,20 +489,20 @@ describe OAuthenticator::Middleware do
 
   describe :bypass do
     it 'bypasses with invalid request' do
-      oapp = OAuthenticator::Middleware.new(simpleapp, :bypass => proc { true }, :config_methods => OAuthenticatorTestConfigMethods)
+      oapp = OAuthenticator::RackAuthenticator.new(simpleapp, :bypass => proc { true }, :config_methods => OAuthenticatorTestConfigMethods)
       env = Rack::MockRequest.env_for('/', :method => 'GET').merge({'HTTP_AUTHORIZATION' => 'oauth ?'})
       assert_response(200, '☺', *oapp.call(env))
     end
 
     it 'does not bypass with invalid request' do
-      oapp = OAuthenticator::Middleware.new(simpleapp, :bypass => proc { false }, :config_methods => OAuthenticatorTestConfigMethods)
+      oapp = OAuthenticator::RackAuthenticator.new(simpleapp, :bypass => proc { false }, :config_methods => OAuthenticatorTestConfigMethods)
       assert_equal(401, oapp.call({}).first)
     end
 
     it 'bypasses with valid request' do
       was_authenticated = nil
       bapp = proc { |env| was_authenticated = env['oauth.authenticated']; [200, {}, ['☺']] }
-      boapp = OAuthenticator::Middleware.new(bapp, :bypass => proc { true }, :config_methods => OAuthenticatorTestConfigMethods)
+      boapp = OAuthenticator::RackAuthenticator.new(bapp, :bypass => proc { true }, :config_methods => OAuthenticatorTestConfigMethods)
       request = Rack::Request.new(Rack::MockRequest.env_for('/', :method => 'GET'))
       request.env['HTTP_AUTHORIZATION'] = OAuthenticator::SignableRequest.new({
         :request_method => request.request_method,
@@ -520,7 +520,7 @@ describe OAuthenticator::Middleware do
     it 'does not bypass with valid request' do
       was_authenticated = nil
       bapp = proc { |env| was_authenticated = env['oauth.authenticated']; [200, {}, ['☺']] }
-      boapp = OAuthenticator::Middleware.new(bapp, :bypass => proc { false }, :config_methods => OAuthenticatorTestConfigMethods)
+      boapp = OAuthenticator::RackAuthenticator.new(bapp, :bypass => proc { false }, :config_methods => OAuthenticatorTestConfigMethods)
       request = Rack::Request.new(Rack::MockRequest.env_for('/', :method => 'GET'))
       request.env['HTTP_AUTHORIZATION'] = OAuthenticator::SignableRequest.new({
         :request_method => request.request_method,
@@ -563,7 +563,7 @@ describe OAuthenticator::Middleware do
         oauth_consumer_key = env['oauth.consumer_key']
         [200, {}, ['☺']]
       end
-      otestapp = OAuthenticator::Middleware.new(testapp, :config_methods => OAuthenticatorTestConfigMethods)
+      otestapp = OAuthenticator::RackAuthenticator.new(testapp, :config_methods => OAuthenticatorTestConfigMethods)
       assert_response(200, '☺', *otestapp.call(request.env))
       assert_equal(token, oauth_token)
       assert_equal(consumer_key, oauth_consumer_key)

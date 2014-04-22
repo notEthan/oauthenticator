@@ -89,7 +89,7 @@ documentation for the module `OAuthenticator::ConfigMethods`, which defines stub
 each recognized method, with method documentation relating to your implementation.
 
 A simple, contrived example follows, which approximately resembles what you might implement. It is not useful 
-on its own but will be used in following examples for usage of Middleware and SignedRequest. 
+on its own but will be used in following examples for usage of RackAuthenticator and SignedRequest. 
 
 ```ruby
 require 'oauthenticator'
@@ -158,25 +158,25 @@ end
 You may also find it enlightening to peruse `test/test_config_methods.rb`, which sets up some very simple 
 storage in memory, and defines a module of config methods which are used through the tests. 
 
-### OAuthenticator::Middleware
+### OAuthenticator::RackAuthenticator
 
-The middleware is used by passing the above-mentioned module on the `:config_methods` key to  initialize the 
-middleware:
+The RackAuthenticator middleware is used by passing the above-mentioned module on the `:config_methods` key to 
+initialize the middleware:
 
 ```ruby
 # config.ru
 
-use OAuthenticator::Middleware, :config_methods => AwesomeOAuthConfig
+use OAuthenticator::RackAuthenticator, :config_methods => AwesomeOAuthConfig
 run proc { |env| [200, {'Content-Type' => 'text/plain'}, ['access granted!']] }
 ```
 
 The authentication can also be bypassed with a proc on the `:bypass` key; see the documentation for 
-`OAuthenticator::Middleware` for the details of that. 
+`OAuthenticator::RackAuthenticator` for the details of that. 
 
 ### OAuthenticator::SignedRequest
 
-The OAuthenticator::SignedRequest class may be used independently of the middleware, though it must also be 
-passed your module of config methods to include. It is used like:
+The OAuthenticator::SignedRequest class may be used independently of the RackAuthenticator middleware, though 
+it must also be passed your module of config methods to include. It is used like:
 
 ```ruby
 OAuthenticator::SignedRequest.including_config(AwesomeOAuthConfig).new(request_attrs)
