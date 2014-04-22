@@ -8,7 +8,24 @@ if Faraday::Request.respond_to?(:register_middleware)
 end
 
 module OAuthenticator
-  # OAuthenticator Faraday middleware to sign outgoing requests 
+  # OAuthenticator Faraday middleware to sign outgoing requests.
+  #
+  # The middleware should be in the stack immediately before the adapter. Any other middleware that modifies 
+  # the request between OAuthenticator signing it and the request actually being made may render the signature 
+  # invalid. 
+  #
+  # This request middleware is registered as `:oauthenticator_signer`. It should be used like
+  #
+  #     connection = Faraday.new('http://example.com/') do |faraday|
+  #       faraday.request :url_encoded
+  #       faraday.request :oauthenticator_signer, signing_options
+  #       faraday.adapter Faraday.default_adapter
+  #     end
+  #
+  # Note that `:url_encoded` is only included to illustrate that other middleware should all go before 
+  # `:oauthenticator_signer`; the use of `:url_encoded` is not related to OAuthenticator. 
+  #
+  # See {#initialize} for details of what the `signing_options` hash should include. 
   class FaradaySigner
     # options are passed to {OAuthenticator::SignableRequest}. 
     #
