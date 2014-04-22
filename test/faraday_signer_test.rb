@@ -28,6 +28,24 @@ describe OAuthenticator::FaradaySigner do
     assert_response 200, '☺', response
   end
 
+  it 'succeeds with form-encoded with HMAC' do
+    signing_options = {
+      :signature_method => 'HMAC-SHA1',
+      :consumer_key => consumer_key,
+      :consumer_secret => consumer_secret,
+      :token => token,
+      :token_secret => token_secret,
+    }
+
+    connection = Faraday.new(:url => 'http://example.com') do |faraday|
+      faraday.request :url_encoded
+      faraday.request :oauthenticator_signer, signing_options
+      faraday.adapter :rack, oapp
+    end
+    response = connection.put('/', :foo => {:bar => :baz})
+    assert_response 200, '☺', response
+  end
+
   it 'is unauthorized' do
     signing_options = {
       :signature_method => 'PLAINTEXT',
