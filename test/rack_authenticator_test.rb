@@ -51,7 +51,7 @@ describe OAuthenticator::RackAuthenticator do
     request = Rack::Request.new(Rack::MockRequest.env_for('/',
       :method => 'GET',
       :input => 'a=b&a=c',
-      'CONTENT_TYPE' => 'application/x-www-form-urlencoded; charset=UTF8',
+      'CONTENT_TYPE' => 'application/x-www-form-urlencoded; charset=UTF8'
     ))
     request.env['HTTP_AUTHORIZATION'] = OAuthenticator::SignableRequest.new({
       :request_method => request.request_method,

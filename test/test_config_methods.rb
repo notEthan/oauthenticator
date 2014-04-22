@@ -1,3 +1,5 @@
+# encoding: utf-8
+
 # config methods for testing OAuthenticator. simple 
 module OAuthenticatorTestConfigMethods
   class << self

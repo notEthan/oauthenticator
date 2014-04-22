@@ -47,7 +47,7 @@ module OAuthenticator
       unless scanner.eos?
         auth_parse_error.call("Could not parse Authorization header: #{header}\naround or after character #{scanner.pos}: #{scanner.rest}")
       end
-      duplicates = attributes.select { |k,v| v.size > 1 }
+      duplicates = attributes.reject { |k,v| v.size <= 1 }
       if duplicates.any?
         errors = duplicates.map do |k,vs|
           {k => "Received multiple instances of Authorization parameter #{k}. Received values were: #{vs.inspect}"}

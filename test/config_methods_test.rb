@@ -36,7 +36,7 @@ describe OAuthenticator::SignedRequest do
     assert_equal 2, called
   end
   it 'uses the default value for allowed signature methods' do
-    assert_equal %w(RSA-SHA1 HMAC-SHA1 PLAINTEXT), OAuthenticator::SignedRequest.new({}).allowed_signature_methods
+    assert_equal %w(RSA-SHA1 HMAC-SHA1 PLAINTEXT).sort, OAuthenticator::SignedRequest.new({}).allowed_signature_methods.sort
   end
   it 'uses default value for body_hash_required?' do
     assert_equal false, OAuthenticator::SignedRequest.new({}).body_hash_required?
