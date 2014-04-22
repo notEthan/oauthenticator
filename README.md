@@ -7,6 +7,45 @@ error messages when authentication fails.
 
 ## Signing outgoing requests
 
+### Faraday
+
+OAuthenticator provides Faraday middleware for easy signing of outgoing requests. This request middleware is 
+registered with faraday named `:oauthenticator_signer`.
+
+The middleware should be in the stack immediately before the adapter. Any other middleware that modifies the 
+request between OAuthenticator signing it and the request actually being made may render the signature 
+invalid. 
+
+See the documentation for {OAuthenticator::FaradaySigner} for more detailed information.
+
+An example:
+
+```ruby
+require 'oauthenticator'
+
+signing_options = {
+  :signature_method => 'HMAC-SHA1',
+  :consumer_key => 'a consumer',
+  :consumer_secret => 'a consumer secret',
+  :token => 'a token',
+  :token_secret => 'a token secret',
+  :realm => 'The Realm',
+}
+
+connection = Faraday.new('http://example.com/') do |faraday|
+  faraday.request :url_encoded
+  faraday.request :oauthenticator_signer, signing_options
+  faraday.adapter Faraday.default_adapter
+end
+
+connection.get '/path'
+```
+
+Note that `:url_encoded` is only included to illustrate that other middleware should all go before 
+`:oauthenticator_signer`; the use of `:url_encoded` is not related to OAuthenticator. 
+
+### Any other HTTP library
+
 Generating an Authorization header to apply to an outgoing request is a relatively straightforward affair:
 
 ```ruby
