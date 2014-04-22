@@ -10,7 +10,7 @@ module OAuthenticator
   # structured like rails / ActiveResource:
   #
   #     {'errors': {'attribute1': ['messageA', 'messageB'], 'attribute2': ['messageC']}}
-  class Middleware
+  class RackAuthenticator
     # options:
     #
     # - `:bypass` - a proc which will be called with a Rack::Request, which must have a boolean result. 

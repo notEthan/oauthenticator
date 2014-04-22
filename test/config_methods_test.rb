@@ -17,15 +17,15 @@ describe OAuthenticator::SignedRequest do
       assert called
     end
   end
-  it "complains when a method without a default is not implemented, using middleware" do
+  it "complains when a method without a default is not implemented, using RackAuthenticator" do
     exc = assert_raises(NotImplementedError) do
-      OAuthenticator::Middleware.new(proc {}, {:config_methods => Module.new}).call({'HTTP_AUTHORIZATION' => %q(OAuth oauth_timestamp="1")})
+      OAuthenticator::RackAuthenticator.new(proc {}, {:config_methods => Module.new}).call({'HTTP_AUTHORIZATION' => %q(OAuth oauth_timestamp="1")})
     end
-    assert_match /passed to OAuthenticator::Middleware using the option :config_methods./, exc.message
+    assert_match /passed to OAuthenticator::RackAuthenticator using the option :config_methods./, exc.message
   end
-  it "complains middleware is not given config methods" do
+  it "complains RackAuthenticator is not given config methods" do
     assert_raises(ArgumentError) do
-      OAuthenticator::Middleware.new(proc {})
+      OAuthenticator::RackAuthenticator.new(proc {})
     end
   end
   it 'uses timestamp_valid_period if that is implemented but timestamp_valid_past or timestamp_valid_future is not' do
