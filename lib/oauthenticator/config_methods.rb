@@ -98,6 +98,10 @@ module OAuthenticator
     # it's worth noting that if this ever returns true, it may indicate a replay attack under way against your 
     # application. the replay attack will fail due to OAuth, but you may wish to log the event.
     #
+    # this method MAY simply return false IF the method #use_nonce! is implemented to raise 
+    # OAuthenticator::NonceUsedError when it encounters an already-used nonce. this may be preferable - see 
+    # the #use_nonce! documentation. 
+    #
     # @return [Boolean] whether the request's nonce has already been used.
     def nonce_used?
       config_method_not_implemented
@@ -106,7 +110,18 @@ module OAuthenticator
     # cause the nonce, available via the `#nonce` method, to be marked as used. you may wish to use this in 
     # conjunction with the timestamp (`#timestamp`).
     #
+    # although this will only be called when #nonce_used? has returned false, since a nonzero amount of time 
+    # does elapse between that being called and this, a race condition may occur. therefore, if the 
+    # implementation is able to perform an atomic test-and-set (e.g. with SETNX in redis, or with a 
+    # uniqueness-ensuring index in SQL) when it is using the nonce, then it SHOULD do so in this method, 
+    # and if the test-and-set indicates the nonce has been used, SHOULD raise OAuthenticator::NonceUsedError.
+    #
+    # if it is more performant for the implementation to only check whether the nonce is used once, when 
+    # setting, then the method #nonce_used? MAY simply return false, and raising 
+    # OAuthenticator::NonceUsedError from this method may be the only method of indicating a used nonce.
+    #
     # @return [Void] (return value is ignored / unused)
+    # @raise [OAuthenticator::NonceUsedError] if the nonce (with the timestamp, optionally) has already been used
     def use_nonce!
       config_method_not_implemented
     end

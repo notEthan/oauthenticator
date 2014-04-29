@@ -2,6 +2,10 @@ require 'oauthenticator/signable_request'
 require 'oauthenticator/parse_authorization'
 
 module OAuthenticator
+  # an error which is to be raised when an attempt is made to use a nonce which has already been used.
+  class NonceUsedError < Error
+  end
+
   # this class represents an OAuth signed request. its primary user-facing method is {#errors}, which returns 
   # nil if the request is valid and authentic, or a helpful object of error messages describing what was 
   # invalid if not. 
@@ -215,7 +219,12 @@ module OAuthenticator
           throw(:errors, {'Authorization oauth_signature' => ['is invalid']})
         end
 
-        use_nonce!
+        begin
+          use_nonce!
+        rescue NonceUsedError
+          throw(:errors, {'Authorization oauth_nonce' => ['has already been used']})
+        end
+
         nil
       end
     end

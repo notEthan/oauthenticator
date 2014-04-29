@@ -318,6 +318,26 @@ describe OAuthenticator::RackAuthenticator do
     assert_response(200, '☺', *oapp.call(request.env))
     assert_response(401, /Authorization oauth_nonce.*has already been used/m, *oapp.call(request.env))
   end
+  it 'has an already-used nonce, via use_nonce!' do
+    Timecop.travel Time.at 1391021695
+    consumer # cause this to be created
+    request = Rack::Request.new(Rack::MockRequest.env_for('/', :method => 'GET'))
+    request.env['HTTP_AUTHORIZATION'] = %q(OAuth oauth_consumer_key="test_client_app_key", ) +
+      %q(oauth_nonce="c1c2bd8676d44e48691c8dceffa66a96", ) +
+      %q(oauth_signature="Xy1s5IUn8x0U2KPyHBw4B2cHZMo%3D", ) +
+      %q(oauth_signature_method="HMAC-SHA1", ) +
+      %q(oauth_timestamp="1391021695", ) +
+      %q(oauth_version="1.0")
+    test_config_methods_nonce_used_false = Module.new do
+      include OAuthenticatorTestConfigMethods
+      def nonce_used?
+        false
+      end
+    end
+    app = OAuthenticator::RackAuthenticator.new(simpleapp, :config_methods => test_config_methods_nonce_used_false)
+    assert_response(200, '☺', *app.call(request.env))
+    assert_response(401, /Authorization oauth_nonce.*has already been used/m, *app.call(request.env))
+  end
   it 'omits signature' do
     Timecop.travel Time.at 1391021695
     consumer # cause this to be created
