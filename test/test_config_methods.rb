@@ -18,7 +18,12 @@ module OAuthenticatorTestConfigMethods
   end
 
   def use_nonce!
-    OAuthenticatorTestConfigMethods.nonces << nonce
+    if OAuthenticatorTestConfigMethods.nonces.include?(nonce)
+      # checking the same thing as #nonce_used? lets #nonce_used? be overridden to return false and things still work 
+      raise OAuthenticator::NonceUsedError
+    else
+      OAuthenticatorTestConfigMethods.nonces << nonce
+    end
   end
 
   def timestamp_valid_period

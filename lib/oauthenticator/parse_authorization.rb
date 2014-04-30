@@ -4,7 +4,7 @@ module OAuthenticator
   class Error < StandardError
     # @param message [String]
     # @param errors [Hash<String, Array<String>>]
-    def initialize(message, errors=nil)
+    def initialize(message=nil, errors=nil)
       super(message)
       @errors = errors
     end
