@@ -28,16 +28,16 @@ Gem::Specification.new do |spec|
   spec.add_runtime_dependency 'rack', '~> 1.4'
   spec.add_runtime_dependency 'json', '~> 1.8'
   spec.add_runtime_dependency 'faraday', '~> 0.9'
-  spec.add_development_dependency "rake"
-  spec.add_development_dependency "minitest"
-  spec.add_development_dependency "minitest-reporters"
-  spec.add_development_dependency "rack-test"
-  spec.add_development_dependency "timecop"
-  spec.add_development_dependency "simplecov"
+  spec.add_development_dependency 'rake'
+  spec.add_development_dependency 'minitest'
+  spec.add_development_dependency 'minitest-reporters'
+  spec.add_development_dependency 'rack-test'
+  spec.add_development_dependency 'timecop'
+  spec.add_development_dependency 'simplecov'
   begin # things for yard
-    spec.add_development_dependency "yard"
-    spec.add_development_dependency "rdiscount"
-    spec.add_development_dependency "redcarpet"
-    spec.add_development_dependency "rdoc", "~> 3.9.0"
+    spec.add_development_dependency 'yard'
+    spec.add_development_dependency 'rdiscount'
+    spec.add_development_dependency 'redcarpet'
+    spec.add_development_dependency 'rdoc', '~> 3.9.0'
   end
 end
