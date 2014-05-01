@@ -34,5 +34,6 @@ Gem::Specification.new do |spec|
   spec.add_development_dependency 'rack-test'
   spec.add_development_dependency 'timecop'
   spec.add_development_dependency 'simplecov'
+  spec.add_development_dependency 'api_hammer'
   spec.add_development_dependency 'yard'
 end

@@ -9,3 +9,5 @@ task 'default' => 'test'
 require 'yard'
 YARD::Rake::YardocTask.new do |t|
 end
+
+require 'api_hammer/tasks'
