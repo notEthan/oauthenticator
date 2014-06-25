@@ -177,8 +177,8 @@ module OAuthenticator
     # @return [String]
     def base_string_uri
       Addressable::URI.parse(@attributes['uri'].to_s).tap do |uri|
-        uri.scheme = uri.scheme.downcase
-        uri.host = uri.host.downcase
+        uri.scheme = uri.scheme.downcase if uri.scheme
+        uri.host = uri.host.downcase if uri.host
         uri.normalize!
         uri.fragment = nil
         uri.query = nil
