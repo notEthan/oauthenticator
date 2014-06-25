@@ -219,10 +219,12 @@ module OAuthenticator
           throw(:errors, {'Authorization oauth_signature' => ['is invalid']})
         end
 
-        begin
-          use_nonce!
-        rescue NonceUsedError
-          throw(:errors, {'Authorization oauth_nonce' => ['has already been used']})
+        if nonce?
+          begin
+            use_nonce!
+          rescue NonceUsedError
+            throw(:errors, {'Authorization oauth_nonce' => ['has already been used']})
+          end
         end
 
         nil
