@@ -57,10 +57,8 @@ module OAuthenticator
         :body => request_env[:body]
       }
       oauthenticator_signable_request = OAuthenticator::SignableRequest.new(@options.merge(request_attributes))
-      authorization = oauthenticator_signable_request.authorization
-      signed_request_headers = request_env[:request_headers].merge('Authorization' => authorization)
-      signed_request_env = request_env.merge(:request_headers => signed_request_headers)
-      @app.call(signed_request_env)
+      request_env[:request_headers]['Authorization'] = oauthenticator_signable_request.authorization
+      @app.call(request_env)
     end
   end
 end
