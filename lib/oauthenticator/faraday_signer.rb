@@ -1,3 +1,4 @@
+require 'oauthenticator'
 require 'faraday'
 
 if Faraday.respond_to?(:register_middleware)
