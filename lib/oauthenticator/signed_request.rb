@@ -112,22 +112,22 @@ module OAuthenticator
         # timestamp
         if !timestamp?
           unless signature_method == 'PLAINTEXT'
-            errors['Authorization oauth_timestamp'] << "is missing"
+            errors['Authorization oauth_timestamp'] << "Authorization oauth_timestamp is missing"
           end
         elsif timestamp !~ /\A\s*\d+\s*\z/
-          errors['Authorization oauth_timestamp'] << "is not an integer - got: #{timestamp}"
+          errors['Authorization oauth_timestamp'] << "Authorization oauth_timestamp is not an integer - got: #{timestamp}"
         else
           timestamp_i = timestamp.to_i
           if timestamp_i < Time.now.to_i - timestamp_valid_past
-            errors['Authorization oauth_timestamp'] << "is too old: #{timestamp}"
+            errors['Authorization oauth_timestamp'] << "Authorization oauth_timestamp is too old: #{timestamp}"
           elsif timestamp_i > Time.now.to_i + timestamp_valid_future
-            errors['Authorization oauth_timestamp'] << "is too far in the future: #{timestamp}"
+            errors['Authorization oauth_timestamp'] << "Authorization oauth_timestamp is too far in the future: #{timestamp}"
           end
         end
 
         # oauth version
         if version? && version != '1.0'
-          errors['Authorization oauth_version'] << "must be 1.0; got: #{version}"
+          errors['Authorization oauth_version'] << "Authorization oauth_version must be 1.0; got: #{version}"
         end
 
         # she's filled with secrets
@@ -135,11 +135,11 @@ module OAuthenticator
 
         # consumer / client application
         if !consumer_key?
-          errors['Authorization oauth_consumer_key'] << "is missing"
+          errors['Authorization oauth_consumer_key'] << "Authorization oauth_consumer_key is missing"
         else
           secrets[:consumer_secret] = consumer_secret
           if !secrets[:consumer_secret]
-            errors['Authorization oauth_consumer_key'] << 'is invalid'
+            errors['Authorization oauth_consumer_key'] << 'Authorization oauth_consumer_key is invalid'
           end
         end
 
@@ -147,32 +147,32 @@ module OAuthenticator
         if token?
           secrets[:token_secret] = token_secret
           if !secrets[:token_secret]
-            errors['Authorization oauth_token'] << 'is invalid'
+            errors['Authorization oauth_token'] << 'Authorization oauth_token is invalid'
           elsif !token_belongs_to_consumer?
-            errors['Authorization oauth_token'] << 'does not belong to the specified consumer'
+            errors['Authorization oauth_token'] << 'Authorization oauth_token does not belong to the specified consumer'
           end
         end
 
         # nonce
         if !nonce?
           unless signature_method == 'PLAINTEXT'
-            errors['Authorization oauth_nonce'] << "is missing"
+            errors['Authorization oauth_nonce'] << "Authorization oauth_nonce is missing"
           end
         elsif nonce_used?
-          errors['Authorization oauth_nonce'] << "has already been used"
+          errors['Authorization oauth_nonce'] << "Authorization oauth_nonce has already been used"
         end
 
         # signature method
         if !signature_method?
-          errors['Authorization oauth_signature_method'] << "is missing"
+          errors['Authorization oauth_signature_method'] << "Authorization oauth_signature_method is missing"
         elsif !allowed_signature_methods.any? { |sm| signature_method.downcase == sm.downcase }
-          errors['Authorization oauth_signature_method'] << "must be one of " +
+          errors['Authorization oauth_signature_method'] << "Authorization oauth_signature_method must be one of " +
             "#{allowed_signature_methods.join(', ')}; got: #{signature_method}"
         end
 
         # signature
         if !signature?
-          errors['Authorization oauth_signature'] << "is missing"
+          errors['Authorization oauth_signature'] << "Authorization oauth_signature is missing"
         end
 
         signable_request = SignableRequest.new(@attributes.merge(secrets).merge('authorization' => oauth_header_params))
@@ -189,21 +189,21 @@ module OAuthenticator
               if body_hash == signable_request.body_hash
                 # all good
               else
-                errors['Authorization oauth_body_hash'] << "is invalid"
+                errors['Authorization oauth_body_hash'] << "Authorization oauth_body_hash is invalid"
               end
             else
               # received a body hash with plaintext. weird situation - we will ignore it; signature will not 
               # be verified but it will be a part of the signature. 
             end
           else
-            errors['Authorization oauth_body_hash'] << "must not be included with form-encoded requests"
+            errors['Authorization oauth_body_hash'] << "Authorization oauth_body_hash must not be included with form-encoded requests"
           end
         else
           # allowed?
           if !signable_request.form_encoded?
             # required?
             if body_hash_required?
-              errors['Authorization oauth_body_hash'] << "is required (on non-form-encoded requests)"
+              errors['Authorization oauth_body_hash'] << "Authorization oauth_body_hash is required (on non-form-encoded requests)"
             else
               # okay - not supported by client, but allowed
             end
@@ -216,14 +216,14 @@ module OAuthenticator
 
         # proceed to check signature
         unless self.signature == signable_request.signature
-          throw(:errors, {'Authorization oauth_signature' => ['is invalid']})
+          throw(:errors, {'Authorization oauth_signature' => ['Authorization oauth_signature is invalid']})
         end
 
         if nonce?
           begin
             use_nonce!
           rescue NonceUsedError
-            throw(:errors, {'Authorization oauth_nonce' => ['has already been used']})
+            throw(:errors, {'Authorization oauth_nonce' => ['Authorization oauth_nonce has already been used']})
           end
         end
 
