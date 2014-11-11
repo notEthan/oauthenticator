@@ -297,7 +297,7 @@ module OAuthenticator
     # @return [String]
     def rsa_sha1_signature
       private_key = OpenSSL::PKey::RSA.new(@attributes['consumer_secret'])
-      Base64.encode64(private_key.sign(OpenSSL::Digest::SHA1.new, signature_base)).chomp.gsub(/\n/, '')
+      Base64.encode64(private_key.sign(OpenSSL::Digest::SHA1.new, signature_base)).gsub(/\n/, '')
     end
 
     # signature, with method HMAC-SHA1. section 3.4.2
@@ -306,7 +306,7 @@ module OAuthenticator
     def hmac_sha1_signature
       # hmac secret is same as plaintext signature 
       secret = plaintext_signature
-      Base64.encode64(OpenSSL::HMAC.digest(OpenSSL::Digest::SHA1.new, secret, signature_base)).chomp.gsub(/\n/, '')
+      Base64.encode64(OpenSSL::HMAC.digest(OpenSSL::Digest::SHA1.new, secret, signature_base)).gsub(/\n/, '')
     end
 
     # signature, with method plaintext. section 3.4.4
@@ -320,7 +320,7 @@ module OAuthenticator
     #
     # @return [String]
     def sha1_body_hash
-      Base64.encode64(OpenSSL::Digest::SHA1.digest(read_body)).chomp.gsub(/\n/, '')
+      Base64.encode64(OpenSSL::Digest::SHA1.digest(read_body)).gsub(/\n/, '')
     end
 
     # map of oauth signature methods to their signature instance methods on this class 
