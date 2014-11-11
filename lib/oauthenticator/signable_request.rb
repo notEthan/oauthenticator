@@ -69,10 +69,10 @@ module OAuthenticator
       required = %w(request_method uri media_type body)
       required += %w(signature_method consumer_key) unless @attributes['authorization']
       missing = required - @attributes.keys
-      raise ArgumentError, "missing: #{missing.inspect}" if missing.any?
+      raise ArgumentError, "missing required attributes: #{missing.inspect}" if missing.any?
       other_recognized = PROTOCOL_PARAM_KEYS + %w(authorization consumer_secret token_secret realm hash_body?)
       extra = @attributes.keys - (required + other_recognized)
-      raise ArgumentError, "received unrecognized @attributes: #{extra.inspect}" if extra.any?
+      raise ArgumentError, "received unrecognized attributes: #{extra.inspect}" if extra.any?
 
       if @attributes['authorization']
         # this means we are signing an existing request to validate the received signature. don't use defaults.
