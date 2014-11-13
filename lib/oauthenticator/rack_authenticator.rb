@@ -45,7 +45,7 @@ module OAuthenticator
         oauth_request = oauth_signed_request_class.from_rack_request(request)
         if oauth_request.errors
           log_unauthenticated(env, oauth_request)
-          unauthenticated_response({'errors' => oauth_request.errors})
+          unauthenticated_response(oauth_request.errors)
         else
           log_success(env, oauth_request)
           env["oauth.consumer_key"] = oauth_request.consumer_key
@@ -61,11 +61,24 @@ module OAuthenticator
     # the response for an unauthenticated request. the argument will be a hash with the key 'errors', whose 
     # value is a hash with string keys indicating attributes with errors, and values being arrays of strings 
     # indicating error messages on the attribute key.. 
-    def unauthenticated_response(error_object)
+    def unauthenticated_response(errors)
       # default to a blank realm, I suppose
       realm = @options[:realm] || ''
       response_headers = {"WWW-Authenticate" => %Q(OAuth realm="#{realm}"), 'Content-Type' => 'application/json'}
-      [401, response_headers, [JSON.pretty_generate(error_object)]]
+
+      body = {'errors' => errors}
+      error_message = begin
+        error_values = errors.values.inject([], &:+)
+        if error_values.size <= 1
+          error_values.first
+        else
+          # sentencify with periods 
+          error_values.map { |v| v =~ /\.\s*\z/ ? v : v + '.' }.join(' ')
+        end
+      end
+      body['error_message'] = error_message if error_message
+
+      [401, response_headers, [JSON.pretty_generate(body)]]
     end
 
     # write a log entry regarding an unauthenticated request
