@@ -50,7 +50,7 @@ module OAuthenticator
       duplicates = attributes.reject { |k,v| v.size <= 1 }
       if duplicates.any?
         errors = duplicates.map do |k,vs|
-          {k => "Received multiple instances of Authorization parameter #{k}. Received values were: #{vs.inspect}"}
+          {k => ["Received multiple instances of Authorization parameter #{k}. Received values were: #{vs.inspect}"]}
         end.inject({}, &:update)
         raise DuplicatedParameters.new("Received duplicate parameters: #{duplicates.keys.inspect}", errors)
       end
