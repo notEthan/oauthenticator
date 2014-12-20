@@ -1,3 +1,7 @@
+# 1.3.1
+
+- set media type to the default that the adapter will use if it's not specified on a request that is expected to have a body
+
 # 1.3.0
 
 - Make error messages fully-human readable on their own (not requiring context of the error key)
