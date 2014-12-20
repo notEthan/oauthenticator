@@ -60,7 +60,7 @@ module OAuthenticator
 
     # the response for an unauthenticated request. the argument will be a hash with the key 'errors', whose 
     # value is a hash with string keys indicating attributes with errors, and values being arrays of strings 
-    # indicating error messages on the attribute key.. 
+    # indicating error messages on the attribute key. 
     def unauthenticated_response(errors)
       # default to a blank realm, I suppose
       realm = @options[:realm] || ''
