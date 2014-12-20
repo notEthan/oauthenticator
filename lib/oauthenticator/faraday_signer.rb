@@ -49,6 +49,9 @@ module OAuthenticator
       @options = options
     end
 
+    # see also Faraday::Env::MethodsWithBodies
+    METHODS_WITH_BODIES = %w(post put patch options)
+
     # do the thing
     def call(request_env)
       request_attributes = {
@@ -57,6 +60,13 @@ module OAuthenticator
         :media_type => request_env[:request_headers]['Content-Type'],
         :body => request_env[:body]
       }
+      # the adapter will set the media type to form-encoded when not otherwise specified on 
+      # requests it expects to have a body. see 
+      # Net::HTTPGenericRequest#supply_default_content_type called in #send_request_with_body. 
+      # other adapters do similarly, I think. 
+      if METHODS_WITH_BODIES.include?(request_env[:method].to_s.downcase) && !request_attributes[:media_type]
+        request_attributes[:media_type] = 'application/x-www-form-urlencoded'
+      end
       oauthenticator_signable_request = OAuthenticator::SignableRequest.new(@options.merge(request_attributes))
       request_env[:request_headers]['Authorization'] = oauthenticator_signable_request.authorization
       @app.call(request_env)
