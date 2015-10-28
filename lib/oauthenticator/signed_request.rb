@@ -175,7 +175,17 @@ module OAuthenticator
           errors['Authorization oauth_signature'] << "Authorization oauth_signature is missing"
         end
 
-        signable_request = SignableRequest.new(@attributes.merge(secrets).merge('authorization' => oauth_header_params))
+        signable_request_attributes = @attributes.merge(secrets).merge('authorization' => oauth_header_params)
+        signable_request = SignableRequest.new(signable_request_attributes)
+        signable_requests = [
+          signable_request,
+          SignableRequest.new(signable_request_attributes.merge(
+            'uri' => Addressable::URI.parse(@attributes['uri']).tap do |a|
+              # the client sometimes adds an extra / before the path 
+              a.path = '/' + a.path
+            end.to_s
+          )),
+        ]
 
         # body hash
 
@@ -215,7 +225,7 @@ module OAuthenticator
         throw(:errors, errors) if errors.any?
 
         # proceed to check signature
-        unless self.signature == signable_request.signature
+        unless signable_requests.any? { |sr| self.signature == sr.signature }
           throw(:errors, {'Authorization oauth_signature' => ['Authorization oauth_signature is invalid']})
         end
 
