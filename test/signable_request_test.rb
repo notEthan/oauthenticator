@@ -329,6 +329,7 @@ describe OAuthenticator::SignableRequest do
 
     it 'excludes query and fragment' do
       assert_equal('http://example.com/FooBar', example_request(:uri => 'http://example.com/FooBar?foo=bar#foobar').send(:base_string_uri))
+      assert_equal('http://example.com/FooBar', example_request(:uri => 'http://example.com/FooBar#foobar').send(:base_string_uri))
     end
   end
 
