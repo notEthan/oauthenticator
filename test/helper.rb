@@ -1,8 +1,11 @@
 proc { |p| $:.unshift(p) unless $:.any? { |lp| File.expand_path(lp) == p } }.call(File.expand_path('../lib', File.dirname(__FILE__)))
 
-require 'simplecov'
 
-require 'byebug'
+require 'coveralls'
+Coveralls.wear!
+
+#require 'simplecov'
+#require 'byebug'
 
 # NO EXPECTATIONS 
 ENV["MT_NO_EXPECTATIONS"] = ''
