@@ -35,7 +35,7 @@ module OAuthenticator
       auth_parse_error = proc { |message| raise ParseError.new(message, {'Authorization' => [message]}) }
       scanner.scan(/OAuth\s*/i) || auth_parse_error.call("Authorization scheme is not OAuth - recieved: #{header}")
       attributes = Hash.new { |h,k| h[k] = [] }
-      while match = scanner.scan(/(\w+)="([^"]*)"\s*(,?)\s*/)
+      while scanner.scan(/(\w+)="([^"]*)"\s*(,?)\s*/)
         key = scanner[1]
         value = scanner[2]
         comma_follows = !scanner[3].empty?
