@@ -25,7 +25,7 @@ Gem::Specification.new do |spec|
   ]
   spec.require_paths = ['lib']
 
-  spec.add_runtime_dependency 'rack', '~> 1.4'
+  spec.add_runtime_dependency 'rack', '>= 1.4', '< 2.1'
   spec.add_runtime_dependency 'json', '~> 1.8'
   spec.add_runtime_dependency 'faraday', '~> 0.9'
   spec.add_runtime_dependency 'addressable', '~> 2.3'
@@ -37,4 +37,5 @@ Gem::Specification.new do |spec|
   spec.add_development_dependency 'simplecov'
   spec.add_development_dependency 'api_hammer'
   spec.add_development_dependency 'yard'
+  spec.add_development_dependency 'coveralls'
 end

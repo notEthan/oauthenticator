@@ -31,6 +31,23 @@ describe OAuthenticator::RackAuthenticator do
     assert_response(200, '☺', *oapp.call(request.env))
   end
 
+  it 'makes an invalid two-legged signed request (generated) that we accept anyway because of some bullshit' do
+    request = Rack::Request.new(Rack::MockRequest.env_for('/foo', :method => 'GET'))
+    request_url = Addressable::URI.parse(request.url).tap do |a_uri|
+      a_uri.path = '//foo'
+    end.to_s
+    request.env['HTTP_AUTHORIZATION'] = OAuthenticator::SignableRequest.new({
+      :request_method => request.request_method,
+      :uri => request_url,
+      :media_type => request.media_type,
+      :body => request.body,
+      :signature_method => 'HMAC-SHA1',
+      :consumer_key => consumer_key,
+      :consumer_secret => consumer_secret,
+    }).authorization
+    assert_response(200, '☺', *oapp.call(request.env))
+  end
+
   it 'makes a valid two-legged signed request with a blank token (generated)' do
     request = Rack::Request.new(Rack::MockRequest.env_for('/', :method => 'GET'))
     request.env['HTTP_AUTHORIZATION'] = OAuthenticator::SignableRequest.new({
