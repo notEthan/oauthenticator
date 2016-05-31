@@ -1,5 +1,5 @@
 # OAuthenticator 
 module OAuthenticator
   # OAuthenticator::VERSION
-  VERSION = "1.3.2-vn"
+  VERSION = "1.3.4-vn"
 end
