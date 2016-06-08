@@ -1,5 +1,7 @@
 # OAuthenticator
 
+[![Build Status](https://travis-ci.org/notEthan/oauthenticator.svg?branch=master)](https://travis-ci.org/notEthan/oauthenticator)
+
 OAuthenticator signs outgoing requests with OAuth 1.0. 
 
 OAuthenticator authenticates incoming OAuth 1.0 signed requests, primarily as a middleware, and forms useful 
