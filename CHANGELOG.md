@@ -1,3 +1,7 @@
+# 1.3.2
+
+- loosen dependency to allow rack 2.0
+
 # 1.3.1
 
 - set media type to the default that the adapter will use if it's not specified on a request that is expected to have a body
