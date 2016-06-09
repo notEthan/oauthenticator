@@ -66,9 +66,10 @@ module OAuthenticator
     end
 
     # the signature methods which the application will accept. this MUST be a subset of the signature methods 
-    # defined in the OAuth 1.0 protocol: `%w(HMAC-SHA1 RSA-SHA1 PLAINTEXT)`. the default value for this is all 
-    # allowed signature methods, and may remain unimplemented if you wish to allow all defined signature 
-    # methods. 
+    # defined in the OAuth 1.0 protocol plus OAuthenticator-defined extensions:
+    # `%w(HMAC-SHA1 RSA-SHA1 PLAINTEXT HMAC-SHA512 HMAC-SHA256)`.
+    # the default value for this is all allowed signature methods, and may remain unimplemented if you wish
+    # to allow all defined signature methods.
     #
     # @return [Array<String>]
     def allowed_signature_methods

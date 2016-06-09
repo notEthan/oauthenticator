@@ -304,9 +304,33 @@ module OAuthenticator
     #
     # @return [String]
     def hmac_sha1_signature
+      hmac_digest_signature(OpenSSL::Digest::SHA1)
+    end
+
+    # signature, with method HMAC-SHA256. OAuthenticator extension, outside of spec. do not use.
+    # unless you want to.
+    #
+    # @return [String]
+    def hmac_sha256_signature
+      hmac_digest_signature(OpenSSL::Digest::SHA256)
+    end
+
+    # signature, with method HMAC-SHA512. OAuthenticator extension, outside of spec. do not use.
+    # unless you want to.
+    #
+    # @return [String]
+    def hmac_sha512_signature
+      hmac_digest_signature(OpenSSL::Digest::SHA512)
+    end
+
+    # signature with a HMAC digest
+    #
+    # @param digest_class [Class] the digest class
+    # @return [String]
+    def hmac_digest_signature(digest_class)
       # hmac secret is same as plaintext signature 
       secret = plaintext_signature
-      Base64.encode64(OpenSSL::HMAC.digest(OpenSSL::Digest::SHA1.new, secret, signature_base)).gsub(/\n/, '')
+      Base64.encode64(OpenSSL::HMAC.digest(digest_class.new, secret, signature_base)).gsub(/\n/, '')
     end
 
     # signature, with method plaintext. section 3.4.4
@@ -320,13 +344,39 @@ module OAuthenticator
     #
     # @return [String]
     def sha1_body_hash
-      Base64.encode64(OpenSSL::Digest::SHA1.digest(read_body)).gsub(/\n/, '')
+      digest_body_hash(OpenSSL::Digest::SHA1)
+    end
+
+    # body hash, with a signature method which uses SHA256. OAuthenticator extension, outside of spec. 
+    # do not use. unless you want to.
+    #
+    # @return [String]
+    def sha256_body_hash
+      digest_body_hash(OpenSSL::Digest::SHA256)
+    end
+
+    # body hash, with a signature method which uses SHA512. OAuthenticator extension, outside of spec. 
+    # do not use. unless you want to.
+    #
+    # @return [String]
+    def sha512_body_hash
+      digest_body_hash(OpenSSL::Digest::SHA512)
+    end
+
+    # body hash with a given digest
+    #
+    # @param digest_class [Class] the digest class
+    # @return [String]
+    def digest_body_hash(digest_class)
+      Base64.encode64(digest_class.digest(read_body)).gsub(/\n/, '')
     end
 
     # map of oauth signature methods to their signature instance methods on this class 
     SIGNATURE_METHODS = {
       'RSA-SHA1'.freeze => instance_method(:rsa_sha1_signature),
       'HMAC-SHA1'.freeze => instance_method(:hmac_sha1_signature),
+      'HMAC-SHA256'.freeze => instance_method(:hmac_sha256_signature),
+      'HMAC-SHA512'.freeze => instance_method(:hmac_sha512_signature),
       'PLAINTEXT'.freeze => instance_method(:plaintext_signature),
     }.freeze
 
@@ -335,6 +385,8 @@ module OAuthenticator
     BODY_HASH_METHODS = {
       'RSA-SHA1'.freeze => instance_method(:sha1_body_hash),
       'HMAC-SHA1'.freeze => instance_method(:sha1_body_hash),
+      'HMAC-SHA256'.freeze => instance_method(:sha256_body_hash),
+      'HMAC-SHA512'.freeze => instance_method(:sha512_body_hash),
     }.freeze
   end
 end
