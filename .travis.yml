@@ -10,4 +10,12 @@ rvm:
 matrix:
   allow_failures:
     - rvm: ruby-head
+  exclude:
+    - rvm: 2.0.0
+      gemfile: Gemfile_rack_2
+    - rvm: 2.1.8
+      gemfile: Gemfile_rack_2
+gemfile:
+  - Gemfile_rack_1
+  - Gemfile_rack_2
 
