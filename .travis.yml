@@ -4,17 +4,13 @@ before_script: bundle install
 script: bundle exec rake
 rvm:
   - 2.0.0
-  - 2.1.8
   - 2.2.4
   - 2.3.1
-  - ruby-head
 matrix:
   allow_failures:
     - rvm: ruby-head
   exclude:
     - rvm: 2.0.0
-      gemfile: Gemfile_rack_2
-    - rvm: 2.1.8
       gemfile: Gemfile_rack_2
 gemfile:
   - Gemfile_rack_1
