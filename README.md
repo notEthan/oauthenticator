@@ -75,13 +75,13 @@ See the documentation for {OAuthenticator::SignableRequest} for more detailed in
 
 ### OAuth Request Body Hash
 
-The [OAuth Request Body Hash](https://oauth.googlecode.com/svn/spec/ext/body_hash/1.0/oauth-bodyhash.html)
+The [OAuth Request Body Hash](https://tools.ietf.org/html/draft-eaton-oauth-bodyhash-00)
 specification is supported. By default all signing of outgoing does include the body hash. This can be 
 disabled by setting the `:hash_body?` / `'hash_body?'` attribute to false when instantiating an 
 OAuthenticator::SignableRequest. 
 
 For info on when to include the body hash, see 
-[When to Include the Body Hash](https://oauth.googlecode.com/svn/spec/ext/body_hash/1.0/oauth-bodyhash.html#when_to_include). 
+[When to Include the Body Hash](https://tools.ietf.org/html/draft-eaton-oauth-bodyhash-00#section-4.1.1). 
 
 ## Authenticating incoming requests
 
@@ -195,7 +195,7 @@ methods it needs to function.
 
 ### OAuth Request Body Hash
 
-The [OAuth Request Body Hash](https://oauth.googlecode.com/svn/spec/ext/body_hash/1.0/oauth-bodyhash.html)
+The [OAuth Request Body Hash](https://tools.ietf.org/html/draft-eaton-oauth-bodyhash-00)
 specification is supported. Requests which include the oauth_body_hash parameter are authenticated according 
 to the spec. 
 
