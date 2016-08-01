@@ -1,4 +1,5 @@
 require 'faraday'
+require 'rack'
 
 if Faraday.respond_to?(:register_middleware)
   Faraday.register_middleware(:request, :oauthenticator_signer => proc { OAuthenticator::FaradaySigner })
@@ -53,10 +54,11 @@ module OAuthenticator
 
     # do the thing
     def call(request_env)
+      media_type = Rack::Request.new('CONTENT_TYPE' => request_env[:request_headers]['Content-Type']).media_type
       request_attributes = {
         :request_method => request_env[:method],
         :uri => request_env[:url],
-        :media_type => request_env[:request_headers]['Content-Type'],
+        :media_type => media_type,
         :body => request_env[:body]
       }
       # the adapter will set the media type to form-encoded when not otherwise specified on 
