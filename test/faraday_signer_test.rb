@@ -46,6 +46,23 @@ describe OAuthenticator::FaradaySigner do
     assert_response 200, '☺', response
   end
 
+  it 'succeeds with charset' do
+    signing_options = {
+      :signature_method => 'HMAC-SHA1',
+      :consumer_key => consumer_key,
+      :consumer_secret => consumer_secret,
+      :token => token,
+      :token_secret => token_secret,
+    }
+
+    connection = Faraday.new(:url => 'http://example.com', :headers => {'Content-Type' => 'application/x-www-form-urlencoded; charset=UTF-8'}) do |faraday|
+      faraday.request :oauthenticator_signer, signing_options
+      faraday.adapter :rack, oapp
+    end
+    response = connection.post('/', 'a=b')
+    assert_response 200, '☺', response
+  end
+
   it 'is unauthorized' do
     signing_options = {
       :signature_method => 'PLAINTEXT',
