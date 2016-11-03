@@ -1,3 +1,10 @@
+# 1.3.3
+
+- env["oauth.signed_request"] contains the signed request. this makes any helper methods from the implemented 
+config methods module available and helps avoid code duplication (and sometimes duplicated db queries - 
+depending on implementation)
+- fix irrelevant warning with Hash#reject called on hash with a default proc
+
 # 1.3.2
 
 - loosen dependency to allow rack 2.0
