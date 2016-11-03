@@ -48,6 +48,7 @@ module OAuthenticator
           unauthenticated_response(oauth_request.errors)
         else
           log_success(env, oauth_request)
+          env["oauth.signed_request"] = oauth_request
           env["oauth.consumer_key"] = oauth_request.consumer_key
           env["oauth.token"] = oauth_request.token
           env["oauth.authenticated"] = true
