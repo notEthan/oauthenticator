@@ -592,14 +592,16 @@ describe OAuthenticator::RackAuthenticator do
       end
     end
 
-    it 'sets oauth.authenticated, oauth.token, oauth.consumer_key' do
+    it 'sets oauth.authenticated, oauth.token, oauth.consumer_key, oauth.signed_request' do
       oauth_authenticated = nil
       oauth_token = nil
       oauth_consumer_key = nil
+      oauth_signed_request = nil
       testapp = proc do |env|
         oauth_authenticated = env['oauth.authenticated']
         oauth_token = env['oauth.token']
         oauth_consumer_key = env['oauth.consumer_key']
+        oauth_signed_request = env['oauth.signed_request']
         [200, {}, ['☺']]
       end
       otestapp = OAuthenticator::RackAuthenticator.new(testapp, :config_methods => OAuthenticatorTestConfigMethods)
@@ -607,6 +609,7 @@ describe OAuthenticator::RackAuthenticator do
       assert_equal(token, oauth_token)
       assert_equal(consumer_key, oauth_consumer_key)
       assert_equal(true, oauth_authenticated)
+      assert_kind_of(OAuthenticator::SignedRequest, oauth_signed_request)
     end
   end
 end
