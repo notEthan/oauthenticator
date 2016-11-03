@@ -34,7 +34,7 @@ module OAuthenticator
       scanner = StringScanner.new(header)
       auth_parse_error = proc { |message| raise ParseError.new(message, {'Authorization' => [message]}) }
       scanner.scan(/OAuth\s*/i) || auth_parse_error.call("Authorization scheme is not OAuth - recieved: #{header}")
-      attributes = Hash.new { |h,k| h[k] = [] }
+      attributes = {}
       while scanner.scan(/(\w+)="([^"]*)"\s*(,?)\s*/)
         key = scanner[1]
         value = scanner[2]
@@ -42,7 +42,7 @@ module OAuthenticator
         if !comma_follows && !scanner.eos?
           auth_parse_error.call("Could not parse Authorization header: #{header}\naround or after character #{scanner.pos}: #{scanner.rest}")
         end
-        attributes[unescape(key)] << unescape(value)
+        (attributes[unescape(key)] ||= []) << unescape(value)
       end
       unless scanner.eos?
         auth_parse_error.call("Could not parse Authorization header: #{header}\naround or after character #{scanner.pos}: #{scanner.rest}")
