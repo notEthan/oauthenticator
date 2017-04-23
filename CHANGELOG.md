@@ -1,3 +1,7 @@
+# 1.3.4
+
+- relax json gem dependency constraint
+
 # 1.3.3
 
 - env["oauth.signed_request"] contains the signed request. this makes any helper methods from the implemented 
