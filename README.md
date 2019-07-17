@@ -48,7 +48,10 @@ connection.get '/path'
 ```
 
 Note that `:url_encoded` is only included to illustrate that other middleware should all go before 
-`:oauthenticator_signer`; the use of `:url_encoded` is not related to OAuthenticator. 
+`:oauthenticator_signer`; the use of `:url_encoded` is not related to OAuthenticator.
+
+Note that for the RSA-SHA1 signature method, the token secret is the contents of the RSA certificate
+used for signing the requests.
 
 ### Any other HTTP library
 
