@@ -5,13 +5,8 @@ before_script:
   - bundle install
 script: bundle exec rake test
 rvm:
-  - 2.0.0
-  - 2.3.3
-  - 2.4.0
-matrix:
-  exclude:
-    - rvm: 2.0.0
-      gemfile: Gemfile_rack_2
+  - 2.3.8
+  - 2.6.3
 gemfile:
   - Gemfile_rack_1
   - Gemfile_rack_2
