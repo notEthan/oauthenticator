@@ -1,3 +1,7 @@
+# 1.3.5
+
+- relax faraday and rack gem dependency constraints
+
 # 1.3.4
 
 - relax json gem dependency constraint
