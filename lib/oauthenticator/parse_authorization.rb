@@ -33,7 +33,7 @@ module OAuthenticator
       header = header.to_s
       scanner = StringScanner.new(header)
       auth_parse_error = proc { |message| raise ParseError.new(message, {'Authorization' => [message]}) }
-      scanner.scan(/OAuth\s*/i) || auth_parse_error.call("Authorization scheme is not OAuth - recieved: #{header}")
+      scanner.scan(/OAuth\s*/i) || auth_parse_error.call("Authorization scheme is not OAuth - received: #{header}")
       attributes = {}
       while scanner.scan(/(\w+)="([^"]*)"\s*(,?)\s*/)
         key = scanner[1]
