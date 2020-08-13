@@ -30,7 +30,7 @@ module OAuthenticator
   class FaradaySigner
     # options are passed to {OAuthenticator::SignableRequest}. 
     #
-    # attributes of the request are added by the middleware, so you should not provide those as optiosn 
+    # attributes of the request are added by the middleware, so you should not provide those as options
     # (it would not make sense to do so on the connection level). 
     #
     # These are the options you should or may provide (see {OAuthenticator::SignableRequest} for details of 
