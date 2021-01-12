@@ -231,6 +231,20 @@ describe OAuthenticator::SignableRequest do
       end
     end
 
+    describe 'HMAC-SHA256' do
+      it 'signs with a HMAC-SHA256 digest of the signature base' do
+        request = example_request(
+          :token => 'a token',
+          :token_secret => 'a token secret',
+          :signature_method => 'HMAC-SHA256',
+          :nonce => 'a nonce',
+          :timestamp => 1397726597,
+          :hash_body? => false
+        )
+        assert_equal('Cb4UAr3l25eqC7p2PSm0l6j7lgXvh5SPnMOhPAJ1jWU=', request.signed_protocol_params['oauth_signature'])
+      end
+    end
+
     describe 'RSA-SHA1' do
       it 'signs with a RSA private key SHA1 signature' do
         request = example_request(
@@ -487,6 +501,10 @@ describe OAuthenticator::SignableRequest do
         request = example_request(:media_type => 'text/plain', :body => 'foo=bar', :signature_method => 'HMAC-SHA1')
         assert_equal('L7j0ARXdHmlcviPU+Xzlsftpfu4=', request.protocol_params['oauth_body_hash'])
       end
+      it 'includes by default with non-form-encoded and HMAC-SHA256' do
+        request = example_request(:media_type => 'text/plain', :body => 'foo=bar', :signature_method => 'HMAC-SHA256')
+        assert_equal('O6iQfnolIydIjfOQ7VF8Rblt6tAzYAIZvcpxB9HT+Io=', request.protocol_params['oauth_body_hash'])
+      end
       it 'includes by default with non-form-encoded and RSA-SHA1' do
         request = example_request(:media_type => 'text/plain', :body => 'foo=bar', :signature_method => 'RSA-SHA1', :consumer_secret => rsa_private_key)
         assert_equal('L7j0ARXdHmlcviPU+Xzlsftpfu4=', request.protocol_params['oauth_body_hash'])
@@ -497,6 +515,10 @@ describe OAuthenticator::SignableRequest do
       end
       it 'does not include by default with form-encoded and HMAC-SHA1' do
         request = example_request(:media_type => 'application/x-www-form-urlencoded', :body => 'foo=bar', :signature_method => 'HMAC-SHA1')
+        assert(!request.protocol_params.key?('oauth_body_hash'))
+      end
+      it 'does not include by default with form-encoded and HMAC-SHA256' do
+        request = example_request(:media_type => 'application/x-www-form-urlencoded', :body => 'foo=bar', :signature_method => 'HMAC-SHA256')
         assert(!request.protocol_params.key?('oauth_body_hash'))
       end
       it 'does not include by default with form-encoded and RSA-SHA1' do

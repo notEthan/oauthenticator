@@ -309,6 +309,15 @@ module OAuthenticator
       Base64.encode64(OpenSSL::HMAC.digest(OpenSSL::Digest::SHA1.new, secret, signature_base)).gsub(/\n/, '')
     end
 
+    # signature, with method HMAC-SHA256. section 3.4.2
+    #
+    # @return [String]
+    def hmac_sha256_signature
+      # hmac secret is same as plaintext signature
+      secret = plaintext_signature
+      Base64.encode64(OpenSSL::HMAC.digest(OpenSSL::Digest::SHA256.new, secret, signature_base)).gsub(/\n/, '')
+    end
+
     # signature, with method plaintext. section 3.4.4
     #
     # @return [String]
@@ -323,10 +332,18 @@ module OAuthenticator
       Base64.encode64(OpenSSL::Digest::SHA1.digest(read_body)).gsub(/\n/, '')
     end
 
+    # body hash, with a signature method which uses SHA256. oauth request body hash section 3.2
+    #
+    # @return [String]
+    def sha256_body_hash
+      Base64.encode64(OpenSSL::Digest::SHA256.digest(read_body)).gsub(/\n/, '')
+    end
+
     # map of oauth signature methods to their signature instance methods on this class 
     SIGNATURE_METHODS = {
       'RSA-SHA1'.freeze => instance_method(:rsa_sha1_signature),
       'HMAC-SHA1'.freeze => instance_method(:hmac_sha1_signature),
+      'HMAC-SHA256'.freeze => instance_method(:hmac_sha256_signature),
       'PLAINTEXT'.freeze => instance_method(:plaintext_signature),
     }.freeze
 
@@ -335,6 +352,7 @@ module OAuthenticator
     BODY_HASH_METHODS = {
       'RSA-SHA1'.freeze => instance_method(:sha1_body_hash),
       'HMAC-SHA1'.freeze => instance_method(:sha1_body_hash),
+      'HMAC-SHA256'.freeze => instance_method(:sha256_body_hash),
     }.freeze
   end
 end
