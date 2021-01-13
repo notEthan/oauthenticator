@@ -33,6 +33,7 @@ end
 
 class Rack::Test::Session
   actual_process_request = instance_method(:process_request)
+  remove_method(:process_request)
   define_method(:process_request) do |uri, env, &block|
     oauth_attrs = Thread.current[:oauthenticator_rack_test_attributes]
     if oauth_attrs
