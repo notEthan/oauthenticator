@@ -1,3 +1,7 @@
+# 1.4.0
+
+- support signature methods HMAC-SHA256, HMAC-SHA512
+
 # 1.3.5
 
 - relax faraday and rack gem dependency constraints
