@@ -8,7 +8,7 @@ describe OAuthenticator::SignedRequest do
       exc = assert_raises(NotImplementedError) do
         OAuthenticator::SignedRequest.new({}).public_send(method_without_default)
       end
-      assert_match /included in a subclass of OAuthenticator::SignedRequest/, exc.message
+      assert_match(/included in a subclass of OAuthenticator::SignedRequest/, exc.message)
     end
     it "uses the method #{method_without_default} when implemented" do
       called = false
@@ -21,7 +21,7 @@ describe OAuthenticator::SignedRequest do
     exc = assert_raises(NotImplementedError) do
       OAuthenticator::RackAuthenticator.new(proc {}, {:config_methods => Module.new}).call({'HTTP_AUTHORIZATION' => %q(OAuth oauth_timestamp="1")})
     end
-    assert_match /passed to OAuthenticator::RackAuthenticator using the option :config_methods./, exc.message
+    assert_match(/passed to OAuthenticator::RackAuthenticator using the option :config_methods./, exc.message)
   end
   it "complains RackAuthenticator is not given config methods" do
     assert_raises(ArgumentError) do

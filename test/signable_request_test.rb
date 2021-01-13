@@ -127,7 +127,7 @@ describe OAuthenticator::SignableRequest do
       it 'complains about missing required params' do
         err = assert_raises(ArgumentError) { OAuthenticator::SignableRequest.new({}) }
         %w(request_method uri media_type body consumer_key signature_method).each do |required|
-          assert_match /#{required}/, err.message
+          assert_match(/#{required}/, err.message)
         end
       end
     end
