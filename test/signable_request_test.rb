@@ -127,7 +127,7 @@ describe OAuthenticator::SignableRequest do
       it 'complains about missing required params' do
         err = assert_raises(ArgumentError) { OAuthenticator::SignableRequest.new({}) }
         %w(request_method uri media_type body consumer_key signature_method).each do |required|
-          assert_match /#{required}/, err.message
+          assert_match(/#{required}/, err.message)
         end
       end
     end
@@ -135,7 +135,7 @@ describe OAuthenticator::SignableRequest do
 
   describe 'the example in 3.1' do
     # a request with attributes from the oauth spec
-    def spec_request(attributes={})
+    def spec_request
       example_request({
         :request_method => 'POST',
         :uri => 'http://example.com/request?b5=%3D%253D&a3=a&c%40=&a2=r%20b',

@@ -234,12 +234,12 @@ module OAuthenticator
     require 'oauthenticator/config_methods'
     include ConfigMethods
 
-    private
-
     # hash of header params. keys should be a subset of OAUTH_ATTRIBUTE_KEYS.
     def oauth_header_params
       @oauth_header_params ||= OAuthenticator.parse_authorization(authorization)
     end
+
+    private
 
     # raise a nice error message for a method that needs to be implemented on a module of config methods 
     def config_method_not_implemented
