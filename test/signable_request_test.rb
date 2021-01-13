@@ -135,7 +135,7 @@ describe OAuthenticator::SignableRequest do
 
   describe 'the example in 3.1' do
     # a request with attributes from the oauth spec
-    def spec_request(attributes={})
+    def spec_request
       example_request({
         :request_method => 'POST',
         :uri => 'http://example.com/request?b5=%3D%253D&a3=a&c%40=&a2=r%20b',
