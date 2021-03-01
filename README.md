@@ -159,7 +159,7 @@ module AwesomeOAuthConfig
     # OAuthToken.where(:token => token, :consumer_key => consumer_key).any?
   end
 
-  # whether oauth_body_hash_is_required (this method defaults to false and may be omitted)
+  # whether oauth_body_hash is required (this method defaults to false and may be omitted)
   def body_hash_required?
     false
   end
