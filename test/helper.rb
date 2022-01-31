@@ -2,7 +2,9 @@ proc { |p| $:.unshift(p) unless $:.any? { |lp| File.expand_path(lp) == p } }.cal
 
 require 'simplecov'
 
-require 'byebug'
+if Bundler.load.specs.any? { |spec| spec.name == 'byebug' }
+  require 'byebug'
+end
 
 # NO EXPECTATIONS 
 ENV["MT_NO_EXPECTATIONS"] = ''
