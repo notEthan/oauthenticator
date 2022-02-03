@@ -18,12 +18,8 @@ Gem::Specification.new do |spec|
     'LICENSE.txt',
     'CHANGELOG.md',
     'README.md',
-    'Rakefile.rb',
   ].reject { |f| File.lstat(f).ftype == 'directory' }
-  spec.executables   = []
-  spec.test_files    = `git ls-files -z test`.split("\x0") + [
-    '.simplecov',
-  ]
+
   spec.require_paths = ['lib']
 
   spec.add_runtime_dependency 'rack', '>= 1.4', '< 4.0'
