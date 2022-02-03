@@ -4,6 +4,8 @@ require 'simplecov'
 
 SimpleCov.start
 
+require 'bundler'
+
 # NO EXPECTATIONS 
 ENV["MT_NO_EXPECTATIONS"] = ''
 

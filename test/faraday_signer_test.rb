@@ -2,6 +2,10 @@
 proc { |p| $:.unshift(p) unless $:.any? { |lp| File.expand_path(lp) == p } }.call(File.expand_path('.', File.dirname(__FILE__)))
 require 'helper'
 
+if Bundler.load.specs.any? { |spec| spec.name == 'faraday-rack' }
+  require 'faraday/rack'
+end
+
 # not going to test a ton here, since the Faraday middleware mostly just calls to SignableRequest which is 
 # rather well-tested 
 describe OAuthenticator::FaradaySigner do
