@@ -1,7 +1,3 @@
-source 'https://rubygems.org'
+eval(File.read('Gemfile_base.rb'))
 
-gemspec
-
-gem 'byebug'
-gem 'wwtd'
 gem 'rack', '~> 2.0'
