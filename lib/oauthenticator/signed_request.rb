@@ -93,7 +93,7 @@ module OAuthenticator
     #
     # @return [nil, Hash<String, Array<String>>] either nil or a hash of errors
     def errors
-      return @errors if instance_variables.any? { |ivar| ivar.to_s == '@errors' }
+      return @errors if instance_variable_defined?('@errors')
       @errors = catch(:errors) do
         if authorization.nil?
           throw(:errors, {'Authorization' => ["Authorization header is missing"]})
