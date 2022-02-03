@@ -142,7 +142,7 @@ module AwesomeOAuthConfig
     %w(HMAC-SHA1 RSA-SHA1)
   end
 
-  # consumer secret, looked up by consumer key from awesome storage 
+  # consumer secret, looked up by consumer key from ActiveRecord storage
   def consumer_secret
     OAuthConsumer.where(:key => consumer_key).first.try(:secret)
   end
