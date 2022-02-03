@@ -29,12 +29,4 @@ Gem::Specification.new do |spec|
   spec.add_runtime_dependency 'json'
   spec.add_runtime_dependency 'faraday', '>= 0.9', '< 3.0'
   spec.add_runtime_dependency 'addressable', '~> 2.3'
-  spec.add_development_dependency 'rake'
-  spec.add_development_dependency 'minitest'
-  spec.add_development_dependency 'minitest-reporters'
-  spec.add_development_dependency 'rack-test'
-  spec.add_development_dependency 'timecop'
-  spec.add_development_dependency 'simplecov'
-  spec.add_development_dependency 'api_hammer'
-  spec.add_development_dependency 'yard'
 end
