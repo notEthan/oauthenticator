@@ -30,6 +30,10 @@ jobs:
         exclude:
         - ruby-version: '2.3'
           gemfile: Gemfile_rack_3_faraday_2.rb
+        - ruby-version: truffleruby
+          runs-on: windows-latest
+        - ruby-version: truffleruby+graalvm
+          runs-on: windows-latest
 
     runs-on: ${{ matrix.runs-on }}
 
