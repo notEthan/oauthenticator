@@ -12,13 +12,14 @@ Gem::Specification.new do |spec|
   spec.homepage      = %q(https://github.com/notEthan/oauthenticator)
   spec.license       = 'MIT'
 
-  spec.files         = `git ls-files -z lib`.split("\x0") + [
+  spec.files = [
+    *Dir['lib/**/*'],
     '.yardopts',
     'LICENSE.txt',
     'CHANGELOG.md',
     'README.md',
     'Rakefile.rb',
-  ]
+  ].reject { |f| File.lstat(f).ftype == 'directory' }
   spec.executables   = []
   spec.test_files    = `git ls-files -z test`.split("\x0") + [
     '.simplecov',
