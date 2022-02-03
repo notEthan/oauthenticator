@@ -2,6 +2,8 @@ proc { |p| $:.unshift(p) unless $:.any? { |lp| File.expand_path(lp) == p } }.cal
 
 require 'simplecov'
 
+SimpleCov.start
+
 # NO EXPECTATIONS 
 ENV["MT_NO_EXPECTATIONS"] = ''
 
