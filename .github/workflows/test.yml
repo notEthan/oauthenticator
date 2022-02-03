@@ -10,6 +10,7 @@ jobs:
         ruby-version:
         - '2.3'
         - '2.7'
+        - '3.1'
         runs-on:
         - ubuntu-latest
         gemfile:
