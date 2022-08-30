@@ -61,7 +61,6 @@ module OAuthenticator
     # 'authorization' attribute is given for signature verification. normally, though, they are used and 
     # are required or optional as noted.
     def initialize(attributes)
-      raise TypeError, "attributes must be a hash" unless attributes.is_a?(Hash)
       # stringify symbol keys
       @attributes = attributes.map { |k,v| {k.is_a?(Symbol) ? k.to_s : k => v} }.inject({}, &:update)
 
