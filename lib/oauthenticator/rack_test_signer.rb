@@ -1,3 +1,5 @@
+# typed: strict
+
 module OAuthenticator
   module RackTestSigner
     # takes a block. for the duration of the block, requests made with Rack::Test will be signed

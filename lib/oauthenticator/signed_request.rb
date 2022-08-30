@@ -1,3 +1,5 @@
+# typed: strict
+
 require 'oauthenticator/signable_request'
 require 'oauthenticator/parse_authorization'
 

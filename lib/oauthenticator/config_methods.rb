@@ -1,3 +1,5 @@
+# typed: strict
+
 module OAuthenticator
   # This module contains stubs, or in some cases default values, for implementations of particulars of the 
   # OAuth protocol. Applications must implement some of these, and are likely to want to override the default 

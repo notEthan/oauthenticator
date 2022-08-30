@@ -1,3 +1,5 @@
+# typed: strict
+
 module OAuthenticator
   # OAuthenticator::Error represents some problem with authenticating. it has an #errors attribute with error 
   # messages in the form we use.

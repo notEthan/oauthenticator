@@ -1,3 +1,5 @@
+# typed: strict
+
 require 'openssl'
 require 'addressable/uri'
 require 'base64'

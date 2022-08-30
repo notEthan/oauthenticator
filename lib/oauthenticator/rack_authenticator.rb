@@ -1,3 +1,5 @@
+# typed: strict
+
 require 'rack'
 require 'json'
 require 'oauthenticator/signed_request'
