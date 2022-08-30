@@ -351,7 +351,7 @@ module OAuthenticator
       hmac_digest_signature(OpenSSL::Digest::SHA512)
     end
 
-    sig { params(digest_class: Class).returns(String) }
+    sig { params(digest_class: T.untyped).returns(String) }
     # signature with a HMAC digest
     #
     # @param digest_class [Class] the digest class
