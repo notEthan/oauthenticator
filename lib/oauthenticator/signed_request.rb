@@ -37,19 +37,93 @@ module OAuthenticator
     # oauth attributes parsed from the request authorization
     OAUTH_ATTRIBUTE_KEYS = (SignableRequest::PROTOCOL_PARAM_KEYS + %w(signature body_hash)).freeze
 
-    # readers 
-    ATTRIBUTE_KEYS.each { |attribute_key| define_method(attribute_key) { @attributes[attribute_key] } }
+    def request_method
+      @attributes['request_method']
+    end
 
-    # readers for oauth header parameters 
-    OAUTH_ATTRIBUTE_KEYS.each { |key| define_method(key) { oauth_header_params["oauth_#{key}"] } }
+    def uri
+      @attributes['uri']
+    end
 
-    # question methods to indicate whether oauth header parameters were included with a non-blank value in 
-    # the Authorization header
-    OAUTH_ATTRIBUTE_KEYS.each do |key|
-      define_method("#{key}?") do
-        value = oauth_header_params["oauth_#{key}"]
-        value.is_a?(String) ? !value.empty? : !!value
-      end
+    def body
+      @attributes['body']
+    end
+
+    def media_type
+      @attributes['media_type']
+    end
+
+    def authorization
+      @attributes['authorization']
+    end
+
+    def consumer_key
+      oauth_header_params["oauth_consumer_key"]
+    end
+
+    def token
+      oauth_header_params["oauth_token"]
+    end
+
+    def signature_method
+      oauth_header_params["oauth_signature_method"]
+    end
+
+    def timestamp
+      oauth_header_params["oauth_timestamp"]
+    end
+
+    def nonce
+      oauth_header_params["oauth_nonce"]
+    end
+
+    def version
+      oauth_header_params["oauth_version"]
+    end
+
+    def signature
+      oauth_header_params["oauth_signature"]
+    end
+
+    def body_hash
+      oauth_header_params["oauth_body_hash"]
+    end
+
+    def oauth_header_param?(key)
+      value = oauth_header_params["oauth_#{key}"]
+      value.is_a?(String) ? !value.empty? : !!value
+    end
+
+    def consumer_key?
+      oauth_header_param?('consumer_key')
+    end
+
+    def token?
+      oauth_header_param?('token')
+    end
+
+    def signature_method?
+      oauth_header_param?('signature_method')
+    end
+
+    def timestamp?
+      oauth_header_param?('timestamp')
+    end
+
+    def nonce?
+      oauth_header_param?('nonce')
+    end
+
+    def version?
+      oauth_header_param?('version')
+    end
+
+    def signature?
+      oauth_header_param?('signature')
+    end
+
+    def body_hash?
+      oauth_header_param?('body_hash')
     end
 
     class << self
