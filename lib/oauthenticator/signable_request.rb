@@ -201,7 +201,7 @@ module OAuthenticator
 
     # section 3.4.1.3
     #
-    # @return [Array<Array<String> (size 2)>]
+    # @return [Array<Array<String, nil> (size 2)>]
     def normalized_request_params
       query_params + protocol_params.reject { |k,v| %w(realm oauth_signature).include?(k) }.to_a + entity_params
     end
