@@ -281,7 +281,7 @@ module OAuthenticator
     #
     # @return [Boolean]
     def hash_body?
-      BODY_HASH_METHODS[signature_method] && !form_encoded? &&
+      BODY_HASH_METHODS.key?(signature_method) && !form_encoded? &&
         (@attributes.key?('hash_body?') ? @attributes['hash_body?'] : true)
     end
 
