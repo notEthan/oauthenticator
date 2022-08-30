@@ -15,7 +15,7 @@ module OAuthenticator
   class RackAuthenticator
     extend T::Sig
 
-    sig { params(app: T.untyped, options: T::Hash).void }
+    sig { params(app: T.untyped, options: T::Hash[Symbol, T.untyped]).void }
     # options:
     #
     # - `:bypass` - a proc which will be called with a Rack::Request, which must have a boolean result. 
@@ -38,6 +38,7 @@ module OAuthenticator
       end
     end
 
+    sig { params(env: T::Hash[String, T.untyped]).returns(T::Array[T.any(Integer, T::Hash[String, String], T::Array[String])]) }
     # call the middleware!
     def call(env)
       request = Rack::Request.new(env)
@@ -89,7 +90,7 @@ module OAuthenticator
       [401, response_headers, [JSON.pretty_generate(body)]]
     end
 
-    sig { params(env: Hash, oauth_request: SignedRequest).void }
+    sig { params(env: T::Hash[String, T.untyped], oauth_request: SignedRequest).void }
     # write a log entry regarding an unauthenticated request
     def log_unauthenticated(env, oauth_request)
       log :warn, "OAuthenticator rejected a request:\n" +
@@ -97,13 +98,13 @@ module OAuthenticator
         "\tErrors: #{JSON.generate(oauth_request.errors)}"
     end
 
-    sig { params(env: Hash, oauth_request: SignedRequest).void }
+    sig { params(env: T::Hash[String, T.untyped], oauth_request: SignedRequest).void }
     # write a log entry for a successfully authenticated request
     def log_success(env, oauth_request)
       log :info, "OAuthenticator authenticated an authentic request with Authorization: #{env['HTTP_AUTHORIZATION']}"
     end
 
-    sig { param(level: Symbol, message: String).void }
+    sig { params(level: Symbol, message: String).void }
     def log(level, message)
       if @options[:logger]
         @options[:logger].send(level, message)

@@ -79,7 +79,7 @@ module OAuthenticator
       oauth_header_params["oauth_token"]
     end
 
-    sig { returns(String) }
+    sig { returns(T.nilable(String)) }
     def signature_method
       oauth_header_params["oauth_signature_method"]
     end
@@ -272,7 +272,7 @@ module OAuthenticator
         # signature method
         if !signature_method?
           errors['Authorization oauth_signature_method'] << "Authorization oauth_signature_method is missing"
-        elsif !allowed_signature_methods.any? { |sm| signature_method.downcase == sm.downcase }
+        elsif !allowed_signature_methods.any? { |sm| T.must(signature_method).downcase == sm.downcase }
           errors['Authorization oauth_signature_method'] << "Authorization oauth_signature_method must be one of " +
             "#{allowed_signature_methods.join(', ')}; got: #{signature_method}"
         end
@@ -291,7 +291,7 @@ module OAuthenticator
           # allowed?
           if !signable_request.form_encoded?
             # applicable?
-            if SignableRequest::BODY_HASH_METHODS.key?(signature_method)
+            if SignableRequest::BODY_HASH_METHODS.key?(T.must(signature_method))
               # correct?
               if body_hash == signable_request.body_hash
                 # all good
@@ -344,7 +344,7 @@ module OAuthenticator
     sig { returns(T::Hash[String, String]) }
     # hash of header params. keys should be a subset of OAUTH_ATTRIBUTE_KEYS.
     def oauth_header_params
-      @oauth_header_params ||= T.let(OAuthenticator.parse_authorization(authorization), T.untyped)
+      @oauth_header_params ||= T.let(OAuthenticator.parse_authorization(T.must(authorization)), T.nilable(T::Hash[String, String]))
     end
 
     private

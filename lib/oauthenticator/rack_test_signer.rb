@@ -2,6 +2,8 @@
 
 module OAuthenticator
   module RackTestSigner
+    extend T::Sig
+
     sig { params(oauth_attrs: T::Hash[String, String]).returns(T.untyped) }
     # takes a block. for the duration of the block, requests made with Rack::Test will be signed
     # with the given oauth_attrs. oauth_attrs are passed to {OAuthenticator::SignableRequest}. 
@@ -35,8 +37,12 @@ module OAuthenticator
 end
 
 class Rack::Test::Session
+  extend T::Sig
+
   alias actual_process_request process_request
   remove_method(:process_request)
+
+  sig { params(uri: T.untyped, env: T.untyped).returns(T.untyped) }
   def process_request(uri, env, &block)
     oauth_attrs = Thread.current[:oauthenticator_rack_test_attributes]
     if oauth_attrs

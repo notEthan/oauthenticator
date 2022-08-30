@@ -28,10 +28,12 @@ module OAuthenticator
   #     my_http_request.headers['Authorization'] = oauthenticator_signable_request.authorization
   class SignableRequest
     extend T::Sig
+
     # keys of OAuth protocol parameters which form the Authorization header (with an oauth_ prefix). 
     # signature is considered separately.
     PROTOCOL_PARAM_KEYS = T.let(%w(consumer_key token signature_method timestamp nonce version).map(&:freeze).freeze, T::Array[String])
 
+    sig { params(attributes: T::Hash[T.any(Symbol, String), T.untyped]).void }
     # initialize a signable request with the following attributes (keys may be string or symbol):
     #
     # - request_method (required) - get, post, etc. may be string or symbol.
@@ -65,7 +67,7 @@ module OAuthenticator
     # are required or optional as noted.
     def initialize(attributes)
       # stringify symbol keys
-      @attributes = T.let(attributes.map { |k,v| {k.is_a?(Symbol) ? k.to_s : k => v} }.inject({}, &:update), T.untyped)
+      @attributes = T.let(attributes.map { |k,v| {k.is_a?(Symbol) ? k.to_s : k => v} }.inject({}, &:update), T::Hash[String, T.untyped])
 
       # validation - presence
       required = %w(request_method uri media_type body)
@@ -133,7 +135,7 @@ module OAuthenticator
     #
     # @return [String, nil] oauth body hash
     def body_hash
-      BODY_HASH_METHODS[signature_method] ? BODY_HASH_METHODS[signature_method].bind(self).call : nil
+      BODY_HASH_METHODS[signature_method] ? T.must(BODY_HASH_METHODS[signature_method]).bind(self).call : nil
     end
 
     sig { returns(T::Hash[String, String]) }
@@ -211,7 +213,7 @@ module OAuthenticator
       normalized_request_params.map { |kv| kv.map { |v| OAuthenticator.escape(v) } }.sort.map { |p| p.join('=') }.join('&')
     end
 
-    sig { returns(T::Array[T::Array[String]]) }
+    sig { returns(T::Array[T::Array[T.nilable(String)]]) }
     # section 3.4.1.3
     #
     # @return [Array<Array<String, nil> (size 2)>]
@@ -245,9 +247,10 @@ module OAuthenticator
       end
     end
 
-    sig { returns(T::Array[T::Array[T.nilable(String)]]) }
+    sig { params(data: String).returns(T::Array[T::Array[T.nilable(String)]]) }
     # like CGI.parse but it keeps keys without any value. doesn't keep blank keys though.
     #
+    # @param data [String]
     # @return [Array<Array<String, nil> (size 2)>]
     def parse_form_encoded(data)
       data.split(/[&;]/).map do |pair|

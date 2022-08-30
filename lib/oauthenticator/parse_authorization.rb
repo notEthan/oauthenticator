@@ -6,18 +6,18 @@ module OAuthenticator
   class Error < StandardError
     extend T::Sig
 
-    sig { params(message: T.nilable(T.any(String, Symbol, Exception)), errors: T::Hash[String, T::Array[String]]).void }
+    sig { params(message: T.nilable(T.any(String, Symbol, Exception)), errors: T.nilable(T::Hash[String, T::Array[String]])).void }
     # @param message [String]
     # @param errors [Hash<String, Array<String>>]
     def initialize(message=nil, errors=nil)
       super(message)
-      @errors = T.let(errors, T.untyped)
+      @errors = errors
     end
 
     sig { returns(T::Hash[String, T::Array[String]]) }
     # @return [Hash<String, Array<String>>]
     def errors
-      @errors ||= T.let(Hash.new { |h,k| h[k] = [] }, T.nilable(T::Hash[T.untyped, T.untyped]))
+      @errors ||= Hash.new { |h,k| h[k] = [] }
     end
   end
 
@@ -33,7 +33,7 @@ module OAuthenticator
   class << self
     extend T::Sig
 
-    sig { returns(T::Hash[String, String]) }
+    sig { params(header: String).returns(T::Hash[String, String]) }
     # @param header [String] an Authorization header
     # @return [Hash<String, String>] parsed authorization parameters
     # @raise [OAuthenticator::ParseError] if the header is not well-formed and cannot be parsed
@@ -69,6 +69,7 @@ module OAuthenticator
     # @private
     URI_PARSER = URI.const_defined?(:DEFAULT_PARSER) ? URI::DEFAULT_PARSER : URI
 
+    sig { params(value: T.nilable(String)).returns(String) }
     # escape a value
     # @param value [String] value
     # @return [String] escaped value
@@ -76,6 +77,7 @@ module OAuthenticator
       URI_PARSER.escape(value.to_s, /[^a-z0-9\-\.\_\~]/i)
     end
 
+    sig { params(value: T.nilable(String)).returns(String) }
     # unescape a value
     # @param value [String] escaped value
     # @return [String] unescaped value
