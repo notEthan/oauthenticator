@@ -69,7 +69,7 @@ module OAuthenticator
     # @private
     URI_PARSER = URI.const_defined?(:DEFAULT_PARSER) ? URI::DEFAULT_PARSER : URI
 
-    sig { params(value: T.nilable(String)).returns(String) }
+    sig { params(value: T.untyped).returns(String) }
     # escape a value
     # @param value [String] value
     # @return [String] escaped value
@@ -77,7 +77,7 @@ module OAuthenticator
       URI_PARSER.escape(value.to_s, /[^a-z0-9\-\.\_\~]/i)
     end
 
-    sig { params(value: T.nilable(String)).returns(String) }
+    sig { params(value: T.untyped).returns(String) }
     # unescape a value
     # @param value [String] escaped value
     # @return [String] unescaped value

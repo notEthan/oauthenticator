@@ -187,7 +187,7 @@ module OAuthenticator
       end
     end
 
-    sig { returns(T::Hash[String, T::Array[String]]) }
+    sig { returns(T.nilable(T::Hash[String, T::Array[String]])) }
     # inspects the request represented by this instance of SignedRequest. if the request is authentically 
     # signed with OAuth, returns nil to indicate that there are no errors. if the request is inauthentic or 
     # invalid for any reason, this returns a hash containing the reason(s) why the request is invalid.
@@ -335,7 +335,7 @@ module OAuthenticator
         end
 
         nil
-      end, T.untyped)
+      end, T.nilable(T::Hash[String, T::Array[String]]))
     end
 
     require 'oauthenticator/config_methods'
