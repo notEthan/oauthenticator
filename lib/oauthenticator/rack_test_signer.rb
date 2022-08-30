@@ -32,9 +32,9 @@ module OAuthenticator
 end
 
 class Rack::Test::Session
-  actual_process_request = instance_method(:process_request)
+  alias actual_process_request process_request
   remove_method(:process_request)
-  define_method(:process_request) do |uri, env, &block|
+  def process_request(uri, env, &block)
     oauth_attrs = Thread.current[:oauthenticator_rack_test_attributes]
     if oauth_attrs
       request = Rack::Request.new(env)
@@ -47,6 +47,6 @@ class Rack::Test::Session
       })).authorization
     end
 
-    actual_process_request.bind(self).call(uri, env, &block)
+    actual_process_request(uri, env, &block)
   end
 end
