@@ -157,7 +157,7 @@ module OAuthenticator
 
     class << self
       extend T::Sig
-      sig { params(request: Rack::Request).returns(T.attached_class) }
+      sig { params(request: Rack::Request).returns(SignedRequest) }
       # instantiates a `OAuthenticator::SignedRequest` (subclass thereof, more precisely) representing a 
       # request given as a Rack::Request.
       #

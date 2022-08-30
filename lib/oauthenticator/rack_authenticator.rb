@@ -31,8 +31,8 @@ module OAuthenticator
     # - `:realm` - 401 responses include a `WWW-Authenticate` with the realm set to the given value. default 
     #   is an empty string.
     def initialize(app, options = {})
-      @app = T.let(app, T.untyped)
-      @options = T.let(options, T.untyped)
+      @app = app
+      @options = options
       unless @options[:config_methods].is_a?(Module)
         raise ArgumentError, "options[:config_methods] must be a Module"
       end
