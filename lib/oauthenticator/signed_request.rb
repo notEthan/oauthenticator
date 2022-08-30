@@ -44,98 +44,120 @@ module OAuthenticator
     # oauth attributes parsed from the request authorization
     OAUTH_ATTRIBUTE_KEYS = T.let((SignableRequest::PROTOCOL_PARAM_KEYS + %w(signature body_hash)).freeze, T::Array[String])
 
+    sig { returns(T.nilable(String)) }
     def request_method
       @attributes['request_method']
     end
 
+    sig { returns(T.nilable(String)) }
     def uri
       @attributes['uri']
     end
 
+    sig { returns(T.nilable(String)) }
     def body
       @attributes['body']
     end
 
+    sig { returns(T.nilable(String)) }
     def media_type
       @attributes['media_type']
     end
 
+    sig { returns(T.nilable(String)) }
     def authorization
       @attributes['authorization']
     end
 
+    sig { returns(T.nilable(String)) }
     def consumer_key
       oauth_header_params["oauth_consumer_key"]
     end
 
+    sig { returns(T.nilable(String)) }
     def token
       oauth_header_params["oauth_token"]
     end
 
+    sig { returns(String) }
     def signature_method
       oauth_header_params["oauth_signature_method"]
     end
 
+    sig { returns(T.nilable(String)) }
     def timestamp
       oauth_header_params["oauth_timestamp"]
     end
 
+    sig { returns(T.nilable(String)) }
     def nonce
       oauth_header_params["oauth_nonce"]
     end
 
+    sig { returns(T.nilable(String)) }
     def version
       oauth_header_params["oauth_version"]
     end
 
+    sig { returns(T.nilable(String)) }
     def signature
       oauth_header_params["oauth_signature"]
     end
 
+    sig { returns(T.nilable(String)) }
     def body_hash
       oauth_header_params["oauth_body_hash"]
     end
 
+    sig { params(key: String).returns(T::Boolean) }
     def oauth_header_param?(key)
       value = oauth_header_params["oauth_#{key}"]
       value.is_a?(String) ? !value.empty? : !!value
     end
 
+    sig { returns(T::Boolean) }
     def consumer_key?
       oauth_header_param?('consumer_key')
     end
 
+    sig { returns(T::Boolean) }
     def token?
       oauth_header_param?('token')
     end
 
+    sig { returns(T::Boolean) }
     def signature_method?
       oauth_header_param?('signature_method')
     end
 
+    sig { returns(T::Boolean) }
     def timestamp?
       oauth_header_param?('timestamp')
     end
 
+    sig { returns(T::Boolean) }
     def nonce?
       oauth_header_param?('nonce')
     end
 
+    sig { returns(T::Boolean) }
     def version?
       oauth_header_param?('version')
     end
 
+    sig { returns(T::Boolean) }
     def signature?
       oauth_header_param?('signature')
     end
 
+    sig { returns(T::Boolean) }
     def body_hash?
       oauth_header_param?('body_hash')
     end
 
     class << self
       extend T::Sig
-      sig { params(request: Rack::Request).returns(SignedRequest) }
+      sig { params(request: Rack::Request).returns(T.attached_class) }
       # instantiates a `OAuthenticator::SignedRequest` (subclass thereof, more precisely) representing a 
       # request given as a Rack::Request.
       #
@@ -165,6 +187,7 @@ module OAuthenticator
       end
     end
 
+    sig { returns(T::Hash[String, T::Array[String]]) }
     # inspects the request represented by this instance of SignedRequest. if the request is authentically 
     # signed with OAuth, returns nil to indicate that there are no errors. if the request is inauthentic or 
     # invalid for any reason, this returns a hash containing the reason(s) why the request is invalid.
@@ -318,6 +341,7 @@ module OAuthenticator
     require 'oauthenticator/config_methods'
     include ConfigMethods
 
+    sig { returns(T::Hash[String, String]) }
     # hash of header params. keys should be a subset of OAUTH_ATTRIBUTE_KEYS.
     def oauth_header_params
       @oauth_header_params ||= T.let(OAuthenticator.parse_authorization(authorization), T.untyped)

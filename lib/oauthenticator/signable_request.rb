@@ -117,6 +117,7 @@ module OAuthenticator
       "OAuth #{normalized_protocol_params_string}"
     end
 
+    sig { returns(String) }
     # the oauth_signature calculated for this request.
     #
     # @return [String] oauth signature
@@ -126,6 +127,7 @@ module OAuthenticator
       rbmethod.bind(self).call
     end
 
+    sig { returns(T.nilable(String)) }
     # the oauth_body_hash calculated for this request, if applicable, per the OAuth Request Body Hash 
     # specification.
     #
@@ -134,6 +136,7 @@ module OAuthenticator
       BODY_HASH_METHODS[signature_method] ? BODY_HASH_METHODS[signature_method].bind(self).call : nil
     end
 
+    sig { returns(T::Hash[String, String]) }
     # protocol params for this request as described in section 3.4.1.3 
     #
     # signature is not calculated for this - use #signed_protocol_params to get protocol params including a 
@@ -147,6 +150,7 @@ module OAuthenticator
       @attributes['authorization'].dup
     end
 
+    sig { returns(T::Hash[String, String]) }
     # protocol params for this request as described in section 3.4.1.3, including our calculated 
     # oauth_signature.
     #
@@ -155,6 +159,7 @@ module OAuthenticator
       protocol_params.merge('oauth_signature' => signature)
     end
 
+    sig { returns(T::Boolean) }
     # is the media type application/x-www-form-urlencoded
     #
     # @return [Boolean]
@@ -176,6 +181,7 @@ module OAuthenticator
       parts.map { |v| OAuthenticator.escape(v) }.join('&')
     end
 
+    sig { returns(String) }
     # section 3.4.1.2
     #
     # @return [String]
@@ -189,6 +195,7 @@ module OAuthenticator
       end.to_s
     end
 
+    sig { returns(String) }
     # section 3.4.1.1
     #
     # @return [String]
@@ -196,6 +203,7 @@ module OAuthenticator
       @attributes['request_method'].to_s.upcase
     end
 
+    sig { returns(String) }
     # section 3.4.1.3.2
     #
     # @return [String]
@@ -203,6 +211,7 @@ module OAuthenticator
       normalized_request_params.map { |kv| kv.map { |v| OAuthenticator.escape(v) } }.sort.map { |p| p.join('=') }.join('&')
     end
 
+    sig { returns(T::Array[T::Array[String]]) }
     # section 3.4.1.3
     #
     # @return [Array<Array<String, nil> (size 2)>]
@@ -210,6 +219,7 @@ module OAuthenticator
       query_params + protocol_params.reject { |k,v| %w(realm oauth_signature).include?(k) }.to_a + entity_params
     end
 
+    sig { returns(T::Array[T::Array[T.nilable(String)]]) }
     # section 3.4.1.3.1
     #
     # parsed query params, extracted from the request URI. since keys may appear multiple times, represented 
@@ -220,6 +230,7 @@ module OAuthenticator
       parse_form_encoded(URI.parse(@attributes['uri'].to_s).query || '')
     end
 
+    sig { returns(T::Array[T::Array[T.nilable(String)]]) }
     # section 3.4.1.3.1
     #
     # parsed entity params from the body, when the request is form encoded. since keys may appear multiple 
@@ -234,6 +245,7 @@ module OAuthenticator
       end
     end
 
+    sig { returns(T::Array[T::Array[T.nilable(String)]]) }
     # like CGI.parse but it keeps keys without any value. doesn't keep blank keys though.
     #
     # @return [Array<Array<String, nil> (size 2)>]
@@ -244,6 +256,7 @@ module OAuthenticator
       end.compact
     end
 
+    sig { returns(String) }
     # string of protocol params including signature, sorted 
     #
     # @return [String]
@@ -251,6 +264,7 @@ module OAuthenticator
       signed_protocol_params.sort.map { |(k,v)| %Q(#{OAuthenticator.escape(k)}="#{OAuthenticator.escape(v)}") }.join(', ')
     end
 
+    sig { returns(String) }
     # reads the request body, be it String or IO 
     #
     # @return [String] request body
@@ -271,6 +285,7 @@ module OAuthenticator
       end
     end
 
+    sig { void }
     # set the oauth_body_hash to the hash of the request body 
     #
     # @return [Void]
@@ -280,6 +295,7 @@ module OAuthenticator
       end
     end
 
+    sig { returns(T::Boolean) }
     # whether we will hash the body, per oauth request body hash section 4.1, as well as whether the caller 
     # said to 
     #
@@ -289,6 +305,7 @@ module OAuthenticator
         (@attributes.key?('hash_body?') ? @attributes['hash_body?'] : true)
     end
 
+    sig { returns(String) }
     # signature method 
     #
     # @return [String]
@@ -305,6 +322,7 @@ module OAuthenticator
       Base64.encode64(private_key.sign(OpenSSL::Digest::SHA1.new, signature_base)).gsub(/\n/, '')
     end
 
+    sig { returns(String) }
     # signature, with method HMAC-SHA1. section 3.4.2
     #
     # @return [String]
@@ -312,6 +330,7 @@ module OAuthenticator
       hmac_digest_signature(OpenSSL::Digest::SHA1)
     end
 
+    sig { returns(String) }
     # signature, with method HMAC-SHA256. OAuthenticator extension, outside of spec. do not use.
     # unless you want to.
     #
@@ -320,6 +339,7 @@ module OAuthenticator
       hmac_digest_signature(OpenSSL::Digest::SHA256)
     end
 
+    sig { returns(String) }
     # signature, with method HMAC-SHA512. OAuthenticator extension, outside of spec. do not use.
     # unless you want to.
     #
@@ -339,6 +359,7 @@ module OAuthenticator
       Base64.encode64(OpenSSL::HMAC.digest(digest_class.new, secret, signature_base)).gsub(/\n/, '')
     end
 
+    sig { returns(String) }
     # signature, with method plaintext. section 3.4.4
     #
     # @return [String]
@@ -346,6 +367,7 @@ module OAuthenticator
       @attributes.values_at('consumer_secret', 'token_secret').map { |v| OAuthenticator.escape(v) }.join('&')
     end
 
+    sig { returns(String) }
     # body hash, with a signature method which uses SHA1. oauth request body hash section 3.2
     #
     # @return [String]
@@ -353,6 +375,7 @@ module OAuthenticator
       digest_body_hash(OpenSSL::Digest::SHA1)
     end
 
+    sig { returns(String) }
     # body hash, with a signature method which uses SHA256. OAuthenticator extension, outside of spec. 
     # do not use. unless you want to.
     #
@@ -361,6 +384,7 @@ module OAuthenticator
       digest_body_hash(OpenSSL::Digest::SHA256)
     end
 
+    sig { returns(String) }
     # body hash, with a signature method which uses SHA512. OAuthenticator extension, outside of spec. 
     # do not use. unless you want to.
     #

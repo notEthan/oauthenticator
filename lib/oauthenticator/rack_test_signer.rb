@@ -2,6 +2,7 @@
 
 module OAuthenticator
   module RackTestSigner
+    sig { params(oauth_attrs: T::Hash[String, String]).returns(T.untyped) }
     # takes a block. for the duration of the block, requests made with Rack::Test will be signed
     # with the given oauth_attrs. oauth_attrs are passed to {OAuthenticator::SignableRequest}. 
     #

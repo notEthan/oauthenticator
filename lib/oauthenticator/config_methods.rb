@@ -22,6 +22,8 @@ module OAuthenticator
   # - `#signature`
   module ConfigMethods
     extend T::Sig
+
+    sig { returns(Integer) }
     # the number of seconds (integer) in both the past and future for which the request is considered valid. 
     #
     # if it is desired to have a different period considered valid in the past than in the future, then the 
@@ -36,6 +38,7 @@ module OAuthenticator
       config_method_not_implemented
     end
 
+    sig { returns(Integer) }
     # the number of seconds (integer) in the past for which the request is considered valid. 
     #
     # if the timestamp is more than this number of seconds less than the current clock time, then the request 
@@ -53,6 +56,7 @@ module OAuthenticator
       timestamp_valid_period
     end
 
+    sig { returns(Integer) }
     # the number of seconds (integer) in the future for which the request is considered valid. 
     #
     # if the timestamp is more than this number of seconds greater than the current clock time, then the 
@@ -68,6 +72,7 @@ module OAuthenticator
       timestamp_valid_period
     end
 
+    sig { returns(T::Array[String]) }
     # the signature methods which the application will accept. this MUST be a subset of the signature methods 
     # defined in the OAuth 1.0 protocol plus OAuthenticator-defined extensions:
     # `%w(HMAC-SHA1 RSA-SHA1 PLAINTEXT HMAC-SHA512 HMAC-SHA256)`.
@@ -79,6 +84,7 @@ module OAuthenticator
       SignableRequest::SIGNATURE_METHODS.keys
     end
 
+    sig { returns(String) }
     # this should look up the consumer secret in your application's storage corresponding to the request's 
     # consumer key, which is available via the `#consumer_key` method. see the README for an example 
     # implementation.
@@ -88,6 +94,7 @@ module OAuthenticator
       config_method_not_implemented
     end
 
+    sig { returns(String) }
     # this should look up the token secret in your application's storage corresponding to the request's 
     # token, which is available via the `#token` method. see the README for an example implementation.
     #
@@ -96,6 +103,7 @@ module OAuthenticator
       config_method_not_implemented
     end
 
+    sig { returns(T::Boolean) }
     # whether the nonce, available via the `#nonce` method, has already been used. you may wish to use this in 
     # conjunction with the timestamp (`#timestamp`), per the OAuth 1.0 spec.
     #
@@ -111,6 +119,7 @@ module OAuthenticator
       config_method_not_implemented
     end
 
+    sig { void }
     # cause the nonce, available via the `#nonce` method, to be marked as used. you may wish to use this in 
     # conjunction with the timestamp (`#timestamp`).
     #
@@ -130,6 +139,7 @@ module OAuthenticator
       config_method_not_implemented
     end
 
+    sig { returns(T::Boolean) }
     # whether the token indicated by the request (via `#token`) belongs to the consumer indicated by 
     # the request (via `#consumer_key`). 
     #
@@ -141,6 +151,7 @@ module OAuthenticator
       config_method_not_implemented
     end
 
+    sig { returns(T::Boolean) }
     # whether the request will be considered valid if it is missing the oauth_body_hash parameter, when that 
     # parameter is allowed. if you require requests to include the oauth_body_hash parameter, return true 
     # here. 
@@ -153,7 +164,6 @@ module OAuthenticator
     # does not have a corresponding body hash method - i.e., the PLAINTEXT signature method.
     #
     # @return [Boolean] whether body hash is required
-    sig {returns(FalseClass)}
     def body_hash_required?
       false
     end

@@ -5,14 +5,16 @@ module OAuthenticator
   # messages in the form we use.
   class Error < StandardError
     extend T::Sig
+
+    sig { params(message: T.nilable(T.any(String, Symbol, Exception)), errors: T::Hash[String, T::Array[String]]).void }
     # @param message [String]
     # @param errors [Hash<String, Array<String>>]
-    sig {params(message: T.nilable(T.any(String, Symbol, Exception)), errors: T.untyped).void}
     def initialize(message=nil, errors=nil)
       super(message)
       @errors = T.let(errors, T.untyped)
     end
 
+    sig { returns(T::Hash[String, T::Array[String]]) }
     # @return [Hash<String, Array<String>>]
     def errors
       @errors ||= T.let(Hash.new { |h,k| h[k] = [] }, T.nilable(T::Hash[T.untyped, T.untyped]))
@@ -29,6 +31,9 @@ module OAuthenticator
   class DuplicatedParameters < Error; end
 
   class << self
+    extend T::Sig
+
+    sig { returns(T::Hash[String, String]) }
     # @param header [String] an Authorization header
     # @return [Hash<String, String>] parsed authorization parameters
     # @raise [OAuthenticator::ParseError] if the header is not well-formed and cannot be parsed
