@@ -50,8 +50,8 @@ module OAuthenticator
     # - realm
     # - hash_body?
     def initialize(app, options)
-      @app = T.let(app, T.untyped)
-      @options = T.let(options, T.untyped)
+      @app = app
+      @options = options
     end
 
     # see also Faraday::Env::MethodsWithBodies

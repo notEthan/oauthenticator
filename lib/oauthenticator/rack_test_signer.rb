@@ -22,7 +22,7 @@ module OAuthenticator
     # - version
     # - realm
     # - hash_body?
-    def signing_rack_test(oauth_attrs, &block)
+    def signing_rack_test(oauth_attrs)
       begin
         Thread.current[:oauthenticator_rack_test_attributes] = oauth_attrs
         return yield
