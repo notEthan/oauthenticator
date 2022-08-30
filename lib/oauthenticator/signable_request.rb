@@ -54,7 +54,7 @@ module OAuthenticator
     # - authorization - a hash of a received Authorization header, the result of a call to 
     #   OAuthenticator.parse_authorization. it is useful for calculating the signature of a received request, 
     #   but for fully authenticating a received request it is generally preferable to use 
-    #   OAuthenticator::SignedRequest. specifying this precludes the requirement to specify any of 
+    #   OAuthenticator::SignedRequest. specifying this bypasses the requirement to specify any of
     #   PROTOCOL_PARAM_KEYS.
     #
     # (*) attributes which are in PROTOCOL_PARAM_KEYS are unused (and not required) when the 
