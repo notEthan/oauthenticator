@@ -27,9 +27,10 @@ module OAuthenticator
   #     )
   #     my_http_request.headers['Authorization'] = oauthenticator_signable_request.authorization
   class SignableRequest
+    extend T::Sig
     # keys of OAuth protocol parameters which form the Authorization header (with an oauth_ prefix). 
     # signature is considered separately.
-    PROTOCOL_PARAM_KEYS = %w(consumer_key token signature_method timestamp nonce version).map(&:freeze).freeze
+    PROTOCOL_PARAM_KEYS = T.let(%w(consumer_key token signature_method timestamp nonce version).map(&:freeze).freeze, T::Array[String])
 
     # initialize a signable request with the following attributes (keys may be string or symbol):
     #
@@ -64,7 +65,7 @@ module OAuthenticator
     # are required or optional as noted.
     def initialize(attributes)
       # stringify symbol keys
-      @attributes = attributes.map { |k,v| {k.is_a?(Symbol) ? k.to_s : k => v} }.inject({}, &:update)
+      @attributes = T.let(attributes.map { |k,v| {k.is_a?(Symbol) ? k.to_s : k => v} }.inject({}, &:update), T.untyped)
 
       # validation - presence
       required = %w(request_method uri media_type body)
@@ -111,6 +112,7 @@ module OAuthenticator
     # returns the Authorization header generated for this request.
     #
     # @return [String] Authorization header
+    sig {returns(String)}
     def authorization
       "OAuth #{normalized_protocol_params_string}"
     end
@@ -168,6 +170,7 @@ module OAuthenticator
     # signature base string for signing. section 3.4.1
     #
     # @return [String]
+    sig {returns(String)}
     def signature_base
       parts = [normalized_request_method, base_string_uri, normalized_request_params_string]
       parts.map { |v| OAuthenticator.escape(v) }.join('&')
@@ -296,6 +299,7 @@ module OAuthenticator
     # signature, with method RSA-SHA1. section 3.4.3 
     #
     # @return [String]
+    sig {returns(String)}
     def rsa_sha1_signature
       private_key = OpenSSL::PKey::RSA.new(@attributes['consumer_secret'])
       Base64.encode64(private_key.sign(OpenSSL::Digest::SHA1.new, signature_base)).gsub(/\n/, '')
@@ -328,6 +332,7 @@ module OAuthenticator
     #
     # @param digest_class [Class] the digest class
     # @return [String]
+    sig {params(digest_class: T.untyped).returns(String)}
     def hmac_digest_signature(digest_class)
       # hmac secret is same as plaintext signature 
       secret = plaintext_signature
@@ -368,26 +373,27 @@ module OAuthenticator
     #
     # @param digest_class [Class] the digest class
     # @return [String]
+    sig {params(digest_class: T.untyped).returns(String)}
     def digest_body_hash(digest_class)
       Base64.encode64(digest_class.digest(read_body)).gsub(/\n/, '')
     end
 
     # map of oauth signature methods to their signature instance methods on this class 
-    SIGNATURE_METHODS = {
+    SIGNATURE_METHODS = T.let({
       'RSA-SHA1'.freeze => instance_method(:rsa_sha1_signature),
       'HMAC-SHA1'.freeze => instance_method(:hmac_sha1_signature),
       'HMAC-SHA256'.freeze => instance_method(:hmac_sha256_signature),
       'HMAC-SHA512'.freeze => instance_method(:hmac_sha512_signature),
       'PLAINTEXT'.freeze => instance_method(:plaintext_signature),
-    }.freeze
+    }.freeze, T::Hash[T.untyped, T.untyped])
 
     # map of oauth signature methods to their body hash instance methods on this class. oauth request body 
     # hash section 3.1
-    BODY_HASH_METHODS = {
+    BODY_HASH_METHODS = T.let({
       'RSA-SHA1'.freeze => instance_method(:sha1_body_hash),
       'HMAC-SHA1'.freeze => instance_method(:sha1_body_hash),
       'HMAC-SHA256'.freeze => instance_method(:sha256_body_hash),
       'HMAC-SHA512'.freeze => instance_method(:sha512_body_hash),
-    }.freeze
+    }.freeze, T::Hash[T.untyped, T.untyped])
   end
 end

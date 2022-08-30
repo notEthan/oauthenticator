@@ -13,6 +13,7 @@ module OAuthenticator
   #
   #     {'errors' => {'attribute1' => ['messageA', 'messageB'], 'attribute2' => ['messageC']}}
   class RackAuthenticator
+    extend T::Sig
     # options:
     #
     # - `:bypass` - a proc which will be called with a Rack::Request, which must have a boolean result. 
@@ -27,9 +28,10 @@ module OAuthenticator
     #
     # - `:realm` - 401 responses include a `WWW-Authenticate` with the realm set to the given value. default 
     #   is an empty string.
+    sig {params(app: T.untyped, options: T.untyped).void}
     def initialize(app, options = {})
-      @app = app
-      @options = options
+      @app = T.let(app, T.untyped)
+      @options = T.let(options, T.untyped)
       unless @options[:config_methods].is_a?(Module)
         raise ArgumentError, "options[:config_methods] must be a Module"
       end
@@ -65,6 +67,7 @@ module OAuthenticator
     # the response for an unauthenticated request. the argument will be a hash with the key 'errors', whose 
     # value is a hash with string keys indicating attributes with errors, and values being arrays of strings 
     # indicating error messages on the attribute key. 
+    sig {params(errors: T.untyped).returns(T::Array[T.any(T::Hash[T.untyped, T.untyped], Integer, T::Array[T.untyped])])}
     def unauthenticated_response(errors)
       # default to a blank realm, I suppose
       realm = @options[:realm] || ''

@@ -21,6 +21,7 @@ module OAuthenticator
   # - `#signature_method`
   # - `#signature`
   module ConfigMethods
+    extend T::Sig
     # the number of seconds (integer) in both the past and future for which the request is considered valid. 
     #
     # if it is desired to have a different period considered valid in the past than in the future, then the 
@@ -152,6 +153,7 @@ module OAuthenticator
     # does not have a corresponding body hash method - i.e., the PLAINTEXT signature method.
     #
     # @return [Boolean] whether body hash is required
+    sig {returns(FalseClass)}
     def body_hash_required?
       false
     end

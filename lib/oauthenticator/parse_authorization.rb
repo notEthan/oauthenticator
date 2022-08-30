@@ -4,16 +4,18 @@ module OAuthenticator
   # OAuthenticator::Error represents some problem with authenticating. it has an #errors attribute with error 
   # messages in the form we use.
   class Error < StandardError
+    extend T::Sig
     # @param message [String]
     # @param errors [Hash<String, Array<String>>]
+    sig {params(message: T.nilable(T.any(String, Symbol, Exception)), errors: T.untyped).void}
     def initialize(message=nil, errors=nil)
       super(message)
-      @errors = errors
+      @errors = T.let(errors, T.untyped)
     end
 
     # @return [Hash<String, Array<String>>]
     def errors
-      @errors ||= Hash.new { |h,k| h[k] = [] }
+      @errors ||= T.let(Hash.new { |h,k| h[k] = [] }, T.nilable(T::Hash[T.untyped, T.untyped]))
     end
   end
 

@@ -18,7 +18,10 @@ module OAuthenticator
   # {OAuthenticator::SignedRequest}, use {.including_config}, like 
   # `OAuthenticator::SignedRequest.including_config(config_module)`.
   class SignedRequest
+    extend T::Sig
     class << self
+      extend T::Sig
+      sig { params(config_methods_module: Unparser::Emitter::Module).returns(Class) }
       # returns a subclass of OAuthenticator::SignedRequest which includes the given config module 
       #
       # @param config_methods_module [Module] a module which implements the methods described in the 
@@ -26,15 +29,15 @@ module OAuthenticator
       #
       # @return [Class] subclass of SignedRequest with the given module included 
       def including_config(config_methods_module)
-        @extended_classes ||= Hash.new do |h, confmodule|
+        @extended_classes ||= T.let(Hash.new do |h, confmodule|
           h[confmodule] = Class.new(::OAuthenticator::SignedRequest).send(:include, confmodule)
-        end
+        end, T.nilable(T::Hash[T.untyped, T.untyped]))
         @extended_classes[config_methods_module]
       end
     end
 
     # attributes of a SignedRequest
-    ATTRIBUTE_KEYS = %w(request_method uri body media_type authorization).map(&:freeze).freeze
+    ATTRIBUTE_KEYS = T.let(%w(request_method uri body media_type authorization).map(&:freeze).freeze, T::Array[String])
 
     # oauth attributes parsed from the request authorization
     OAUTH_ATTRIBUTE_KEYS = (SignableRequest::PROTOCOL_PARAM_KEYS + %w(signature body_hash)).freeze
@@ -129,6 +132,8 @@ module OAuthenticator
     end
 
     class << self
+      extend T::Sig
+      sig { params(request: Rack::Request).returns(SignedRequest) }
       # instantiates a `OAuthenticator::SignedRequest` (subclass thereof, more precisely) representing a 
       # request given as a Rack::Request.
       #
@@ -149,8 +154,9 @@ module OAuthenticator
 
     # initialize a {SignedRequest}. this should not be called on OAuthenticator::SignedRequest directly, but 
     # a subclass made with {.including_config} - see {SignedRequest}'s documentation.
+    sig {params(attributes: T.untyped).void}
     def initialize(attributes)
-      @attributes = attributes.inject({}){|acc, (k,v)| acc.update((k.is_a?(Symbol) ? k.to_s : k) => v) }
+      @attributes = T.let(attributes.inject({}){|acc, (k,v)| acc.update((k.is_a?(Symbol) ? k.to_s : k) => v) }, T.untyped)
       extra_attributes = @attributes.keys - ATTRIBUTE_KEYS
       if extra_attributes.any?
         raise ArgumentError, "received unrecognized attribute keys: #{extra_attributes.inspect}"
@@ -170,7 +176,7 @@ module OAuthenticator
     # @return [nil, Hash<String, Array<String>>] either nil or a hash of errors
     def errors
       return @errors if instance_variable_defined?('@errors')
-      @errors = catch(:errors) do
+      @errors = T.let(catch(:errors) do
         if authorization.nil?
           throw(:errors, {'Authorization' => ["Authorization header is missing"]})
         elsif authorization !~ /\S/
@@ -304,7 +310,7 @@ module OAuthenticator
         end
 
         nil
-      end
+      end, T.untyped)
     end
 
     require 'oauthenticator/config_methods'
@@ -312,14 +318,15 @@ module OAuthenticator
 
     # hash of header params. keys should be a subset of OAUTH_ATTRIBUTE_KEYS.
     def oauth_header_params
-      @oauth_header_params ||= OAuthenticator.parse_authorization(authorization)
+      @oauth_header_params ||= T.let(OAuthenticator.parse_authorization(authorization), T.untyped)
     end
 
     private
 
     # raise a nice error message for a method that needs to be implemented on a module of config methods 
+    sig {void}
     def config_method_not_implemented
-      caller_name = caller[0].match(%r(in `(.*?)'))[1]
+      caller_name = T.must(caller[0]).match(%r(in `(.*?)'))[1]
       using_middleware = caller.any? { |l| l =~ %r(oauthenticator/rack_authenticator.rb:.*`call') }
       message = "method \##{caller_name} must be implemented on a module of oauth config methods, which is " + begin
         if using_middleware

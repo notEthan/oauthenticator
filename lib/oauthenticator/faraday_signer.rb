@@ -47,12 +47,12 @@ module OAuthenticator
     # - realm
     # - hash_body?
     def initialize(app, options)
-      @app = app
-      @options = options
+      @app = T.let(app, T.untyped)
+      @options = T.let(options, T.untyped)
     end
 
     # see also Faraday::Env::MethodsWithBodies
-    METHODS_WITH_BODIES = %w(post put patch options)
+    METHODS_WITH_BODIES = T.let(%w(post put patch options), T::Array[String])
 
     # do the thing
     def call(request_env)
