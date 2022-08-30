@@ -346,7 +346,7 @@ module OAuthenticator
       @oauth_header_params ||= T.let(OAuthenticator.parse_authorization(T.must(authorization)), T.nilable(T::Hash[String, String]))
     end
 
-    private
+    protected
 
     sig { returns(T.noreturn) }
     # raise a nice error message for a method that needs to be implemented on a module of config methods 
