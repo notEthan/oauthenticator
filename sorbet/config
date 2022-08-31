@@ -1,0 +1,3 @@
+--dir=.
+--ignore=test/
+--ignore=Rakefile.rb
