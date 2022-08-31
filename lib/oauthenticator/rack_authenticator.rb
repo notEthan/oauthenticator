@@ -43,9 +43,10 @@ module OAuthenticator
       else
         oauth_signed_request_class = OAuthenticator::SignedRequest.including_config(@options[:config_methods])
         oauth_request = oauth_signed_request_class.from_rack_request(request)
-        if oauth_request.errors
+        oauth_request_errors = oauth_request.errors
+        if oauth_request_errors
           log_unauthenticated(env, oauth_request)
-          unauthenticated_response(oauth_request.errors)
+          unauthenticated_response(oauth_request_errors)
         else
           log_success(env, oauth_request)
           env["oauth.signed_request"] = oauth_request
