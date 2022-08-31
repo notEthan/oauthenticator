@@ -348,7 +348,7 @@ module OAuthenticator
 
     private
 
-    sig { void }
+    sig { returns(T.noreturn) }
     # raise a nice error message for a method that needs to be implemented on a module of config methods 
     def config_method_not_implemented
       caller_name = T.must(T.must(T.must(caller[0]).match(%r(in `(.*?)')))[1])
