@@ -57,25 +57,21 @@ module OAuthenticator
       return attributes.map { |k,v| {k => v.first} }.inject({}, &:update)
     end
 
+    # @private
+    URI_PARSER = URI.const_defined?(:DEFAULT_PARSER) ? URI::DEFAULT_PARSER : URI
+
     # escape a value
     # @param value [String] value
     # @return [String] escaped value
     def escape(value)
-      uri_parser.escape(value.to_s, /[^a-z0-9\-\.\_\~]/i)
+      URI_PARSER.escape(value.to_s, /[^a-z0-9\-\.\_\~]/i)
     end
 
     # unescape a value
     # @param value [String] escaped value
     # @return [String] unescaped value
     def unescape(value)
-      uri_parser.unescape(value.to_s)
-    end
-
-    private
-
-    # @return [Object] a parser that responds to #escape and #unescape
-    def uri_parser
-      @uri_parser ||= URI.const_defined?(:Parser) ? URI::Parser.new : URI
+      URI_PARSER.unescape(value.to_s)
     end
   end
 end
