@@ -23,7 +23,7 @@ module OAuthenticator
     class << self
       extend T::Sig
 
-      sig { params(config_methods_module: Module).returns(T.untyped) }
+      sig { params(config_methods_module: Module).returns(T.class_of(SignedRequest)) }
       # returns a subclass of OAuthenticator::SignedRequest which includes the given config module 
       #
       # @param config_methods_module [Module] a module which implements the methods described in the 

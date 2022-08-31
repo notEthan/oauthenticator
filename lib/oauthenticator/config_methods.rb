@@ -35,7 +35,7 @@ module OAuthenticator
     #
     # @return [Integer] period in seconds
     def timestamp_valid_period
-      T.unsafe(self).config_method_not_implemented
+      T.cast(self, SignedRequest).config_method_not_implemented
     end
 
     sig { returns(Integer) }
@@ -91,7 +91,7 @@ module OAuthenticator
     #
     # @return [String] the consumer secret for the request's consumer key
     def consumer_secret
-      T.unsafe(self).config_method_not_implemented
+      T.cast(self, SignedRequest).config_method_not_implemented
     end
 
     sig { returns(String) }
@@ -100,7 +100,7 @@ module OAuthenticator
     #
     # @return [String] the token secret for the request's token
     def token_secret
-      T.unsafe(self).config_method_not_implemented
+      T.cast(self, SignedRequest).config_method_not_implemented
     end
 
     sig { returns(T::Boolean) }
@@ -116,7 +116,7 @@ module OAuthenticator
     #
     # @return [Boolean] whether the request's nonce has already been used.
     def nonce_used?
-      T.unsafe(self).config_method_not_implemented
+      T.cast(self, SignedRequest).config_method_not_implemented
     end
 
     sig { void }
@@ -136,7 +136,7 @@ module OAuthenticator
     # @return [Void] (return value is ignored / unused)
     # @raise [OAuthenticator::NonceUsedError] if the nonce (with the timestamp, optionally) has already been used
     def use_nonce!
-      T.unsafe(self).config_method_not_implemented
+      T.cast(self, SignedRequest).config_method_not_implemented
     end
 
     sig { returns(T::Boolean) }
@@ -148,7 +148,7 @@ module OAuthenticator
     #
     # @return [Boolean] whether the request's token belongs to the request's consumer 
     def token_belongs_to_consumer?
-      T.unsafe(self).config_method_not_implemented
+      T.cast(self, SignedRequest).config_method_not_implemented
     end
 
     sig { returns(T::Boolean) }
