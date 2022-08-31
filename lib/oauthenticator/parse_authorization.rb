@@ -67,7 +67,7 @@ module OAuthenticator
     end
 
     # @private
-    URI_PARSER = URI.const_defined?(:DEFAULT_PARSER) ? URI::DEFAULT_PARSER : URI
+    URI_PARSER = T.let(URI.const_defined?(:DEFAULT_PARSER) ? URI::DEFAULT_PARSER : URI, T.any(URI::RFC2396_Parser, T.class_of(URI)))
 
     sig { params(value: T.untyped).returns(String) }
     # escape a value
