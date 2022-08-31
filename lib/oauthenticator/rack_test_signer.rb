@@ -42,7 +42,7 @@ class Rack::Test::Session
   alias actual_process_request process_request
   remove_method(:process_request)
 
-  sig { params(uri: T.untyped, env: T::Hash[String, T.untyped], block: T.nilable(Proc)).returns(T.untyped) }
+  sig { params(uri: T.untyped, env: T::Hash[String, T.untyped], block: T.nilable(T.proc.returns(T.untyped))).returns(T.untyped) }
   def process_request(uri, env, &block)
     oauth_attrs = Thread.current[:oauthenticator_rack_test_attributes]
     if oauth_attrs
