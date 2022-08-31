@@ -19,9 +19,11 @@ module OAuthenticator
   # `OAuthenticator::SignedRequest.including_config(config_module)`.
   class SignedRequest
     extend T::Sig
+
     class << self
       extend T::Sig
-      sig { params(config_methods_module: Unparser::Emitter::Module).returns(Class) }
+
+      sig { params(config_methods_module: Module).returns(T.untyped) }
       # returns a subclass of OAuthenticator::SignedRequest which includes the given config module 
       #
       # @param config_methods_module [Module] a module which implements the methods described in the 
@@ -31,7 +33,7 @@ module OAuthenticator
       def including_config(config_methods_module)
         @extended_classes ||= T.let(Hash.new do |h, confmodule|
           h[confmodule] = Class.new(::OAuthenticator::SignedRequest).send(:include, confmodule)
-        end, T.nilable(T::Hash[T.untyped, T.untyped]))
+        end, T.nilable(T::Hash[Module, Class]))
         @extended_classes[config_methods_module]
       end
     end
@@ -40,7 +42,7 @@ module OAuthenticator
     ATTRIBUTE_KEYS = T.let(%w(request_method uri body media_type authorization).map(&:freeze).freeze, T::Array[String])
 
     # oauth attributes parsed from the request authorization
-    OAUTH_ATTRIBUTE_KEYS = (SignableRequest::PROTOCOL_PARAM_KEYS + %w(signature body_hash)).freeze
+    OAUTH_ATTRIBUTE_KEYS = T.let((SignableRequest::PROTOCOL_PARAM_KEYS + %w(signature body_hash)).freeze, T::Array[String])
 
     def request_method
       @attributes['request_method']
@@ -152,11 +154,11 @@ module OAuthenticator
       end
     end
 
+    sig { params(attributes: T::Hash[T.any(String, Symbol), String]).void }
     # initialize a {SignedRequest}. this should not be called on OAuthenticator::SignedRequest directly, but 
     # a subclass made with {.including_config} - see {SignedRequest}'s documentation.
-    sig {params(attributes: T.untyped).void}
     def initialize(attributes)
-      @attributes = T.let(attributes.inject({}){|acc, (k,v)| acc.update((k.is_a?(Symbol) ? k.to_s : k) => v) }, T.untyped)
+      @attributes = T.let(attributes.inject({}){|acc, (k,v)| acc.update((k.is_a?(Symbol) ? k.to_s : k) => v) }, T::Hash[String, String])
       extra_attributes = @attributes.keys - ATTRIBUTE_KEYS
       if extra_attributes.any?
         raise ArgumentError, "received unrecognized attribute keys: #{extra_attributes.inspect}"
@@ -323,10 +325,10 @@ module OAuthenticator
 
     private
 
+    sig { void }
     # raise a nice error message for a method that needs to be implemented on a module of config methods 
-    sig {void}
     def config_method_not_implemented
-      caller_name = T.must(caller[0]).match(%r(in `(.*?)'))[1]
+      caller_name = T.must(T.must(T.must(caller[0]).match(%r(in `(.*?)')))[1])
       using_middleware = caller.any? { |l| l =~ %r(oauthenticator/rack_authenticator.rb:.*`call') }
       message = "method \##{caller_name} must be implemented on a module of oauth config methods, which is " + begin
         if using_middleware

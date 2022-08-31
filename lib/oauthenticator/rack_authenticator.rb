@@ -64,10 +64,10 @@ module OAuthenticator
 
     private
 
+    sig { params(errors: T::Hash[String, T::Array[String]]).returns(T::Array[T.any(Integer, T::Hash[String, String], T::Array[String])]) }
     # the response for an unauthenticated request. the argument will be a hash with the key 'errors', whose 
     # value is a hash with string keys indicating attributes with errors, and values being arrays of strings 
     # indicating error messages on the attribute key. 
-    sig {params(errors: T.untyped).returns(T::Array[T.any(T::Hash[T.untyped, T.untyped], Integer, T::Array[T.untyped])])}
     def unauthenticated_response(errors)
       # default to a blank realm, I suppose
       realm = @options[:realm] || ''
