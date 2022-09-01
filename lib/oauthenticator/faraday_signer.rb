@@ -32,7 +32,10 @@ module OAuthenticator
   class FaradaySigner
     extend T::Sig
 
-    sig { params(app: T.untyped, options: T::Hash[T.any(String, Symbol), T.untyped]).void }
+    # App may be anything which responds to #call
+    AppType = T.type_alias { T.untyped }
+
+    sig { params(app: AppType, options: T::Hash[T.any(String, Symbol), T.untyped]).void }
     # options are passed to {OAuthenticator::SignableRequest}. 
     #
     # attributes of the request are added by the middleware, so you should not provide those as options
