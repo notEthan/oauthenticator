@@ -60,7 +60,7 @@ module OAuthenticator
     # see also Faraday::Env::MethodsWithBodies
     METHODS_WITH_BODIES = T.let(%w(post put patch options), T::Array[String])
 
-    sig { params(request_env: T.untyped).returns(T.untyped) }
+    sig { params(request_env: Faraday::Env).returns(Faraday::Response) }
     # do the thing
     def call(request_env)
       media_type = Rack::Request.new('CONTENT_TYPE' => request_env[:request_headers]['Content-Type']).media_type
