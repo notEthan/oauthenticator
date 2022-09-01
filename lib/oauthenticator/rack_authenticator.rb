@@ -18,7 +18,7 @@ module OAuthenticator
     RackResponseType = T.type_alias { [Integer, T::Hash[String, String], T::Array[String]] }
     EnvType = T.type_alias { T::Hash[String, T.untyped] }
 
-    sig { params(app: T.untyped, options: T::Hash[Symbol, T.untyped]).void }
+    sig { params(app: Proc, options: T::Hash[Symbol, T.untyped]).void }
     # options:
     #
     # - `:bypass` - a proc which will be called with a Rack::Request, which must have a boolean result. 
