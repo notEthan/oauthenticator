@@ -3,6 +3,7 @@
 require 'rack'
 require 'json'
 require 'oauthenticator/signed_request'
+require 'logger'
 
 module OAuthenticator
   # Rack middleware to determine if the incoming request is signed authentically with OAuth 1.0.
@@ -18,7 +19,17 @@ module OAuthenticator
     RackResponseType = T.type_alias { [Integer, T::Hash[String, String], T::Array[String]] }
     EnvType = T.type_alias { T::Hash[String, T.untyped] }
 
-    sig { params(app: Proc, options: T::Hash[Symbol, T.untyped]).void }
+    sig do
+      params(
+        app: T.proc.params(arg0: EnvType).returns(RackResponseType),
+        options: {
+          bypass: T.nilable(T.proc.params(arg0: Rack::Request).returns(T.any(T::Boolean, T.untyped))),
+          config_methods: Module,
+          logger: T.nilable(Logger),
+          realm: T.nilable(String),
+        },
+      ).void
+    end
     # options:
     #
     # - `:bypass` - a proc which will be called with a Rack::Request, which must have a boolean result. 
