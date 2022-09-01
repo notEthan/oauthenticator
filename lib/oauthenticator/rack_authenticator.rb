@@ -15,7 +15,7 @@ module OAuthenticator
   class RackAuthenticator
     extend T::Sig
 
-    RackResponseType = T.type_alias { T::Array[T.any(Integer, T::Hash[String, String], T::Array[String])]) }
+    RackResponseType = T.type_alias { [Integer, T::Hash[String, String], T::Array[String]] }
     EnvType = T.type_alias { T::Hash[String, T.untyped] }
 
     sig { params(app: T.untyped, options: T::Hash[Symbol, T.untyped]).void }
