@@ -15,6 +15,9 @@ module OAuthenticator
   class RackAuthenticator
     extend T::Sig
 
+    RackResponseType = T.type_alias { T::Array[T.any(Integer, T::Hash[String, String], T::Array[String])]) }
+    EnvType = T.type_alias { T::Hash[String, T.untyped] }
+
     sig { params(app: T.untyped, options: T::Hash[Symbol, T.untyped]).void }
     # options:
     #
@@ -38,7 +41,7 @@ module OAuthenticator
       end
     end
 
-    sig { params(env: T::Hash[String, T.untyped]).returns(T::Array[T.any(Integer, T::Hash[String, String], T::Array[String])]) }
+    sig { params(env: EnvType).returns(RackResponseType) }
     # call the middleware!
     def call(env)
       request = Rack::Request.new(env)
@@ -66,7 +69,7 @@ module OAuthenticator
 
     private
 
-    sig { params(errors: T::Hash[String, T::Array[String]]).returns(T::Array[T.any(Integer, T::Hash[String, String], T::Array[String])]) }
+    sig { params(errors: T::Hash[String, T::Array[String]]).returns(RackResponseType) }
     # the response for an unauthenticated request. the argument will be a hash with the key 'errors', whose 
     # value is a hash with string keys indicating attributes with errors, and values being arrays of strings 
     # indicating error messages on the attribute key. 
@@ -90,7 +93,7 @@ module OAuthenticator
       [401, response_headers, [JSON.pretty_generate(body)]]
     end
 
-    sig { params(env: T::Hash[String, T.untyped], oauth_request: SignedRequest).void }
+    sig { params(env: EnvType, oauth_request: SignedRequest).void }
     # write a log entry regarding an unauthenticated request
     def log_unauthenticated(env, oauth_request)
       log :warn, "OAuthenticator rejected a request:\n" +
@@ -98,7 +101,7 @@ module OAuthenticator
         "\tErrors: #{JSON.generate(oauth_request.errors)}"
     end
 
-    sig { params(env: T::Hash[String, T.untyped], oauth_request: SignedRequest).void }
+    sig { params(env: EnvType, oauth_request: SignedRequest).void }
     # write a log entry for a successfully authenticated request
     def log_success(env, oauth_request)
       log :info, "OAuthenticator authenticated an authentic request with Authorization: #{env['HTTP_AUTHORIZATION']}"
