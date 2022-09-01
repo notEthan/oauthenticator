@@ -210,7 +210,7 @@ module OAuthenticator
     #
     # @return [String]
     def normalized_request_params_string
-      normalized_request_params.map { |kv| kv.map { |v| OAuthenticator.escape(v) } }.sort.map { |p| p.join('=') }.join('&')
+      normalized_request_params.map { |kv| kv.map { |v| OAuthenticator.escape(v.to_s) } }.sort.map { |p| p.join('=') }.join('&')
     end
 
     sig { returns(T::Array[T::Array[T.nilable(String)]]) }
@@ -264,7 +264,7 @@ module OAuthenticator
     #
     # @return [String]
     def normalized_protocol_params_string
-      signed_protocol_params.sort.map { |(k,v)| %Q(#{OAuthenticator.escape(k)}="#{OAuthenticator.escape(v)}") }.join(', ')
+      signed_protocol_params.sort.map { |(k,v)| %Q(#{OAuthenticator.escape(k)}="#{OAuthenticator.escape(v.to_s)}") }.join(', ')
     end
 
     sig { returns(String) }
@@ -367,7 +367,7 @@ module OAuthenticator
     #
     # @return [String]
     def plaintext_signature
-      @attributes.values_at('consumer_secret', 'token_secret').map { |v| OAuthenticator.escape(v) }.join('&')
+      @attributes.values_at('consumer_secret', 'token_secret').map { |v| OAuthenticator.escape(v.to_s) }.join('&')
     end
 
     sig { returns(String) }

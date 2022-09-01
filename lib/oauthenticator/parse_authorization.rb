@@ -69,20 +69,20 @@ module OAuthenticator
     # @private
     URI_PARSER = T.let(URI.const_defined?(:DEFAULT_PARSER) ? URI::DEFAULT_PARSER : URI, T.any(URI::RFC2396_Parser, T.class_of(URI)))
 
-    sig { params(value: T.untyped).returns(String) }
+    sig { params(value: String).returns(String) }
     # escape a value
     # @param value [String] value
     # @return [String] escaped value
     def escape(value)
-      URI_PARSER.escape(value.to_s, /[^a-z0-9\-\.\_\~]/i)
+      URI_PARSER.escape(value, /[^a-z0-9\-\.\_\~]/i)
     end
 
-    sig { params(value: T.untyped).returns(String) }
+    sig { params(value: String).returns(String) }
     # unescape a value
     # @param value [String] escaped value
     # @return [String] unescaped value
     def unescape(value)
-      URI_PARSER.unescape(value.to_s)
+      URI_PARSER.unescape(value)
     end
   end
 end
