@@ -1,3 +1,4 @@
 --dir=.
 --ignore=test/
 --ignore=Rakefile.rb
+--enable-experimental-requires-ancestor

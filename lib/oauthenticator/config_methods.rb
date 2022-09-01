@@ -22,6 +22,9 @@ module OAuthenticator
   # - `#signature`
   module ConfigMethods
     extend T::Sig
+    extend T::Helpers
+
+    requires_ancestor { SignedRequest }
 
     sig { returns(Integer) }
     # the number of seconds (integer) in both the past and future for which the request is considered valid. 
