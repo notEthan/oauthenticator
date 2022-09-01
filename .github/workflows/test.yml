@@ -14,8 +14,8 @@ jobs:
         runs-on:
         - ubuntu-latest
         gemfile:
-        - Gemfile_rack_1
-        - Gemfile_rack_2
+        - Gemfile_rack_1.rb
+        - Gemfile_rack_2.rb
 
     runs-on: ${{ matrix.runs-on }}
 
