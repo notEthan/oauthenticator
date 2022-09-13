@@ -2,7 +2,6 @@ source 'https://rubygems.org'
 
 gemspec
 
-platform(:mri) { gem 'byebug' }
 gem 'rake'
 gem 'minitest'
 gem 'minitest-reporters'
