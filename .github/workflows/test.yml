@@ -14,13 +14,13 @@ jobs:
         runs-on:
         - ubuntu-latest
         gemfile:
-        - Gemfile_rack_1.rb
-        - Gemfile_rack_2.rb
-        - Gemfile_rack_3.rb
+        - Gemfile_rack_1_faraday_1.rb
+        - Gemfile_rack_2_faraday_1.rb
+        - Gemfile_rack_3_faraday_2.rb
 
         exclude:
         - ruby-version: '2.3'
-          gemfile: Gemfile_rack_3.rb
+          gemfile: Gemfile_rack_3_faraday_2.rb
 
     runs-on: ${{ matrix.runs-on }}
 
