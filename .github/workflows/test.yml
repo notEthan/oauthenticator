@@ -18,6 +18,10 @@ jobs:
         - Gemfile_rack_2.rb
         - Gemfile_rack_3.rb
 
+        exclude:
+        - ruby-version: '2.3'
+          gemfile: Gemfile_rack_3.rb
+
     runs-on: ${{ matrix.runs-on }}
 
     env:
