@@ -1,3 +1,8 @@
+# 1.4.1
+
+- compatible with rack 3
+- compatible with faraday 2
+
 # 1.4.0
 
 - support signature methods HMAC-SHA256, HMAC-SHA512
