@@ -84,7 +84,7 @@ disabled by setting the `:hash_body?` / `'hash_body?'` attribute to false when i
 OAuthenticator::SignableRequest. 
 
 For info on when to include the body hash, see 
-[When to Include the Body Hash](https://tools.ietf.org/html/draft-eaton-oauth-bodyhash-00#section-4.1.1). 
+[When to Include the Body Hash](https://datatracker.ietf.org/doc/html/draft-eaton-oauth-bodyhash-00#when_to_include).
 
 ## Authenticating incoming requests
 
