@@ -9,7 +9,7 @@ module OAuthenticator
   # body a JSON object indicating errors encountered authenticating the request. The error object is 
   # structured like rails / ActiveResource:
   #
-  #     {'errors': {'attribute1': ['messageA', 'messageB'], 'attribute2': ['messageC']}}
+  #     {'errors' => {'attribute1' => ['messageA', 'messageB'], 'attribute2' => ['messageC']}}
   class RackAuthenticator
     # options:
     #
