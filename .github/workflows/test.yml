@@ -8,11 +8,15 @@ jobs:
       fail-fast: false
       matrix:
         ruby-version:
+        - jruby
         - '2.3'
         - '2.7'
         - '3.1'
+        - head
         runs-on:
         - ubuntu-latest
+        - windows-latest
+        - macos-latest
         gemfile:
         - Gemfile_rack_1_faraday_1.rb
         - Gemfile_rack_2_faraday_1.rb
