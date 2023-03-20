@@ -1,5 +1,10 @@
+# typed: strict
+
 module OAuthenticator
   module RackTestSigner
+    extend T::Sig
+
+    sig { params(oauth_attrs: T::Hash[String, String], _block: T.proc.returns(T.untyped)).returns(T.untyped) }
     # takes a block. for the duration of the block, requests made with Rack::Test will be signed
     # with the given oauth_attrs. oauth_attrs are passed to {OAuthenticator::SignableRequest}. 
     #
@@ -17,7 +22,7 @@ module OAuthenticator
     # - version
     # - realm
     # - hash_body?
-    def signing_rack_test(oauth_attrs, &block)
+    def signing_rack_test(oauth_attrs, &_block)
       begin
         Thread.current[:oauthenticator_rack_test_attributes] = oauth_attrs
         return yield
@@ -32,9 +37,13 @@ module OAuthenticator
 end
 
 class Rack::Test::Session
-  actual_process_request = instance_method(:process_request)
+  extend T::Sig
+
+  alias actual_process_request process_request
   remove_method(:process_request)
-  define_method(:process_request) do |uri, env, &block|
+
+  sig { params(uri: T.untyped, env: T::Hash[String, T.untyped], block: T.nilable(T.proc.returns(T.untyped))).returns(Rack::MockResponse) }
+  def process_request(uri, env, &block)
     oauth_attrs = Thread.current[:oauthenticator_rack_test_attributes]
     if oauth_attrs
       request = Rack::Request.new(env)
@@ -47,6 +56,6 @@ class Rack::Test::Session
       })).authorization
     end
 
-    actual_process_request.bind(self).call(uri, env, &block)
+    actual_process_request(uri, env, &block)
   end
 end

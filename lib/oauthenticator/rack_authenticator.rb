@@ -1,6 +1,9 @@
+# typed: strict
+
 require 'rack'
 require 'json'
 require 'oauthenticator/signed_request'
+require 'logger'
 
 module OAuthenticator
   # Rack middleware to determine if the incoming request is signed authentically with OAuth 1.0.
@@ -11,6 +14,22 @@ module OAuthenticator
   #
   #     {'errors' => {'attribute1' => ['messageA', 'messageB'], 'attribute2' => ['messageC']}}
   class RackAuthenticator
+    extend T::Sig
+
+    RackResponseType = T.type_alias { [Integer, T::Hash[String, String], T::Array[String]] }
+    EnvType = T.type_alias { T::Hash[String, T.untyped] }
+
+    sig do
+      params(
+        app: T.proc.params(arg0: EnvType).returns(RackResponseType),
+        options: {
+          bypass: T.nilable(T.proc.params(arg0: Rack::Request).returns(T.any(T::Boolean, T.untyped))),
+          config_methods: Module,
+          logger: T.nilable(Logger),
+          realm: T.nilable(String),
+        },
+      ).void
+    end
     # options:
     #
     # - `:bypass` - a proc which will be called with a Rack::Request, which must have a boolean result. 
@@ -25,7 +44,7 @@ module OAuthenticator
     #
     # - `:realm` - 401 responses include a `WWW-Authenticate` with the realm set to the given value. default 
     #   is an empty string.
-    def initialize(app, options = {})
+    def initialize(app, options)
       @app = app
       @options = options
       unless @options[:config_methods].is_a?(Module)
@@ -33,6 +52,7 @@ module OAuthenticator
       end
     end
 
+    sig { params(env: EnvType).returns(RackResponseType) }
     # call the middleware!
     def call(env)
       request = Rack::Request.new(env)
@@ -43,9 +63,10 @@ module OAuthenticator
       else
         oauth_signed_request_class = OAuthenticator::SignedRequest.including_config(@options[:config_methods])
         oauth_request = oauth_signed_request_class.from_rack_request(request)
-        if oauth_request.errors
+        oauth_request_errors = oauth_request.errors
+        if oauth_request_errors
           log_unauthenticated(env, oauth_request)
-          unauthenticated_response(oauth_request.errors)
+          unauthenticated_response(oauth_request_errors)
         else
           log_success(env, oauth_request)
           env["oauth.signed_request"] = oauth_request
@@ -59,6 +80,7 @@ module OAuthenticator
 
     private
 
+    sig { params(errors: T::Hash[String, T::Array[String]]).returns(RackResponseType) }
     # the response for an unauthenticated request. the argument will be a hash with the key 'errors', whose 
     # value is a hash with string keys indicating attributes with errors, and values being arrays of strings 
     # indicating error messages on the attribute key. 
@@ -82,6 +104,7 @@ module OAuthenticator
       [401, response_headers, [JSON.pretty_generate(body)]]
     end
 
+    sig { params(env: EnvType, oauth_request: SignedRequest).void }
     # write a log entry regarding an unauthenticated request
     def log_unauthenticated(env, oauth_request)
       log :warn, "OAuthenticator rejected a request:\n" +
@@ -89,11 +112,13 @@ module OAuthenticator
         "\tErrors: #{JSON.generate(oauth_request.errors)}"
     end
 
+    sig { params(env: EnvType, oauth_request: SignedRequest).void }
     # write a log entry for a successfully authenticated request
     def log_success(env, oauth_request)
       log :info, "OAuthenticator authenticated an authentic request with Authorization: #{env['HTTP_AUTHORIZATION']}"
     end
 
+    sig { params(level: Symbol, message: String).void }
     def log(level, message)
       if @options[:logger]
         @options[:logger].send(level, message)

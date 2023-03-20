@@ -1,3 +1,5 @@
+# typed: strict
+
 # OAuthenticator 
 module OAuthenticator
   # OAuthenticator::VERSION

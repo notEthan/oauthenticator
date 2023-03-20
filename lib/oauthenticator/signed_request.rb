@@ -1,3 +1,5 @@
+# typed: strict
+
 require 'oauthenticator/signable_request'
 require 'oauthenticator/parse_authorization'
 
@@ -16,7 +18,12 @@ module OAuthenticator
   # {OAuthenticator::SignedRequest}, use {.including_config}, like 
   # `OAuthenticator::SignedRequest.including_config(config_module)`.
   class SignedRequest
+    extend T::Sig
+
     class << self
+      extend T::Sig
+
+      sig { params(config_methods_module: Module).returns(T.class_of(SignedRequest)) }
       # returns a subclass of OAuthenticator::SignedRequest which includes the given config module 
       #
       # @param config_methods_module [Module] a module which implements the methods described in the 
@@ -24,35 +31,132 @@ module OAuthenticator
       #
       # @return [Class] subclass of SignedRequest with the given module included 
       def including_config(config_methods_module)
-        @extended_classes ||= Hash.new do |h, confmodule|
+        @extended_classes ||= T.let(Hash.new do |h, confmodule|
           h[confmodule] = Class.new(::OAuthenticator::SignedRequest).send(:include, confmodule)
-        end
+        end, T.nilable(T::Hash[Module, Class]))
         @extended_classes[config_methods_module]
       end
     end
 
     # attributes of a SignedRequest
-    ATTRIBUTE_KEYS = %w(request_method uri body media_type authorization).map(&:freeze).freeze
+    ATTRIBUTE_KEYS = T.let(%w(request_method uri body media_type authorization).map(&:freeze).freeze, T::Array[String])
 
     # oauth attributes parsed from the request authorization
-    OAUTH_ATTRIBUTE_KEYS = (SignableRequest::PROTOCOL_PARAM_KEYS + %w(signature body_hash)).freeze
+    OAUTH_ATTRIBUTE_KEYS = T.let((SignableRequest::PROTOCOL_PARAM_KEYS + %w(signature body_hash)).freeze, T::Array[String])
 
-    # readers 
-    ATTRIBUTE_KEYS.each { |attribute_key| define_method(attribute_key) { @attributes[attribute_key] } }
+    sig { returns(T.nilable(String)) }
+    def request_method
+      @attributes['request_method']
+    end
 
-    # readers for oauth header parameters 
-    OAUTH_ATTRIBUTE_KEYS.each { |key| define_method(key) { oauth_header_params["oauth_#{key}"] } }
+    sig { returns(T.nilable(String)) }
+    def uri
+      @attributes['uri']
+    end
 
-    # question methods to indicate whether oauth header parameters were included with a non-blank value in 
-    # the Authorization header
-    OAUTH_ATTRIBUTE_KEYS.each do |key|
-      define_method("#{key}?") do
-        value = oauth_header_params["oauth_#{key}"]
-        value.is_a?(String) ? !value.empty? : !!value
-      end
+    sig { returns(T.nilable(String)) }
+    def body
+      @attributes['body']
+    end
+
+    sig { returns(T.nilable(String)) }
+    def media_type
+      @attributes['media_type']
+    end
+
+    sig { returns(T.nilable(String)) }
+    def authorization
+      @attributes['authorization']
+    end
+
+    sig { returns(T.nilable(String)) }
+    def consumer_key
+      oauth_header_params["oauth_consumer_key"]
+    end
+
+    sig { returns(T.nilable(String)) }
+    def token
+      oauth_header_params["oauth_token"]
+    end
+
+    sig { returns(T.nilable(String)) }
+    def signature_method
+      oauth_header_params["oauth_signature_method"]
+    end
+
+    sig { returns(T.nilable(String)) }
+    def timestamp
+      oauth_header_params["oauth_timestamp"]
+    end
+
+    sig { returns(T.nilable(String)) }
+    def nonce
+      oauth_header_params["oauth_nonce"]
+    end
+
+    sig { returns(T.nilable(String)) }
+    def version
+      oauth_header_params["oauth_version"]
+    end
+
+    sig { returns(T.nilable(String)) }
+    def signature
+      oauth_header_params["oauth_signature"]
+    end
+
+    sig { returns(T.nilable(String)) }
+    def body_hash
+      oauth_header_params["oauth_body_hash"]
+    end
+
+    sig { params(key: String).returns(T::Boolean) }
+    def oauth_header_param?(key)
+      value = oauth_header_params["oauth_#{key}"]
+      value.is_a?(String) ? !value.empty? : !!value
+    end
+
+    sig { returns(T::Boolean) }
+    def consumer_key?
+      oauth_header_param?('consumer_key')
+    end
+
+    sig { returns(T::Boolean) }
+    def token?
+      oauth_header_param?('token')
+    end
+
+    sig { returns(T::Boolean) }
+    def signature_method?
+      oauth_header_param?('signature_method')
+    end
+
+    sig { returns(T::Boolean) }
+    def timestamp?
+      oauth_header_param?('timestamp')
+    end
+
+    sig { returns(T::Boolean) }
+    def nonce?
+      oauth_header_param?('nonce')
+    end
+
+    sig { returns(T::Boolean) }
+    def version?
+      oauth_header_param?('version')
+    end
+
+    sig { returns(T::Boolean) }
+    def signature?
+      oauth_header_param?('signature')
+    end
+
+    sig { returns(T::Boolean) }
+    def body_hash?
+      oauth_header_param?('body_hash')
     end
 
     class << self
+      sig { params(request: Rack::Request).returns(SignedRequest) }
       # instantiates a `OAuthenticator::SignedRequest` (subclass thereof, more precisely) representing a 
       # request given as a Rack::Request.
       #
@@ -71,16 +175,18 @@ module OAuthenticator
       end
     end
 
+    sig { params(attributes: T::Hash[T.any(String, Symbol), String]).void }
     # initialize a {SignedRequest}. this should not be called on OAuthenticator::SignedRequest directly, but 
     # a subclass made with {.including_config} - see {SignedRequest}'s documentation.
     def initialize(attributes)
-      @attributes = attributes.inject({}){|acc, (k,v)| acc.update((k.is_a?(Symbol) ? k.to_s : k) => v) }
+      @attributes = T.let(attributes.inject({}){|acc, (k,v)| acc.update((k.is_a?(Symbol) ? k.to_s : k) => v) }, T::Hash[String, String])
       extra_attributes = @attributes.keys - ATTRIBUTE_KEYS
       if extra_attributes.any?
         raise ArgumentError, "received unrecognized attribute keys: #{extra_attributes.inspect}"
       end
     end
 
+    sig { returns(T.nilable(T::Hash[String, T::Array[String]])) }
     # inspects the request represented by this instance of SignedRequest. if the request is authentically 
     # signed with OAuth, returns nil to indicate that there are no errors. if the request is inauthentic or 
     # invalid for any reason, this returns a hash containing the reason(s) why the request is invalid.
@@ -94,7 +200,7 @@ module OAuthenticator
     # @return [nil, Hash<String, Array<String>>] either nil or a hash of errors
     def errors
       return @errors if instance_variable_defined?('@errors')
-      @errors = catch(:errors) do
+      @errors = T.let(catch(:errors) do
         if authorization.nil?
           throw(:errors, {'Authorization' => ["Authorization header is missing"]})
         elsif authorization !~ /\S/
@@ -165,7 +271,7 @@ module OAuthenticator
         # signature method
         if !signature_method?
           errors['Authorization oauth_signature_method'] << "Authorization oauth_signature_method is missing"
-        elsif !allowed_signature_methods.any? { |sm| signature_method.downcase == sm.downcase }
+        elsif !allowed_signature_methods.any? { |sm| T.must(signature_method).downcase == sm.downcase }
           errors['Authorization oauth_signature_method'] << "Authorization oauth_signature_method must be one of " +
             "#{allowed_signature_methods.join(', ')}; got: #{signature_method}"
         end
@@ -184,7 +290,7 @@ module OAuthenticator
           # allowed?
           if !signable_request.form_encoded?
             # applicable?
-            if SignableRequest::BODY_HASH_METHODS.key?(signature_method)
+            if SignableRequest::BODY_HASH_METHODS.key?(T.must(signature_method))
               # correct?
               if body_hash == signable_request.body_hash
                 # all good
@@ -228,22 +334,24 @@ module OAuthenticator
         end
 
         nil
-      end
+      end, T.nilable(T::Hash[String, T::Array[String]]))
     end
 
     require 'oauthenticator/config_methods'
     include ConfigMethods
 
+    sig { returns(T::Hash[String, String]) }
     # hash of header params. keys should be a subset of OAUTH_ATTRIBUTE_KEYS.
     def oauth_header_params
-      @oauth_header_params ||= OAuthenticator.parse_authorization(authorization)
+      @oauth_header_params ||= T.let(OAuthenticator.parse_authorization(T.must(authorization)), T.nilable(T::Hash[String, String]))
     end
 
-    private
+    protected
 
+    sig { returns(T.noreturn) }
     # raise a nice error message for a method that needs to be implemented on a module of config methods 
     def config_method_not_implemented
-      caller_name = caller[0].match(%r(in `(.*?)'))[1]
+      caller_name = T.must(T.must(T.must(caller[0]).match(%r(in `(.*?)')))[1])
       using_middleware = caller.any? { |l| l =~ %r(oauthenticator/rack_authenticator.rb:.*`call') }
       message = "method \##{caller_name} must be implemented on a module of oauth config methods, which is " + begin
         if using_middleware

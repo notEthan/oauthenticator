@@ -1,3 +1,6 @@
+# typed: strict
+
+require 'sorbet-runtime'
 require 'oauthenticator/version'
 require 'oauthenticator/signed_request'
 require 'oauthenticator/signable_request'

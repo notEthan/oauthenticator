@@ -1,8 +1,10 @@
+# typed: strict
+
 require 'faraday'
 require 'rack'
 
 if Faraday.respond_to?(:register_middleware)
-  Faraday.register_middleware(:request, :oauthenticator_signer => proc { OAuthenticator::FaradaySigner })
+  T.unsafe(Faraday).register_middleware(:request, :oauthenticator_signer => proc { OAuthenticator::FaradaySigner })
 end
 if Faraday::Request.respond_to?(:register_middleware)
   Faraday::Request.register_middleware(:oauthenticator_signer => proc { OAuthenticator::FaradaySigner })
@@ -28,6 +30,12 @@ module OAuthenticator
   #
   # See {#initialize} for details of what the `signing_options` hash should include. 
   class FaradaySigner
+    extend T::Sig
+
+    # App may be anything which responds to #call
+    AppType = T.type_alias { T.untyped }
+
+    sig { params(app: AppType, options: T::Hash[T.any(String, Symbol), T.untyped]).void }
     # options are passed to {OAuthenticator::SignableRequest}. 
     #
     # attributes of the request are added by the middleware, so you should not provide those as options
@@ -50,8 +58,9 @@ module OAuthenticator
     end
 
     # see also Faraday::Env::MethodsWithBodies
-    METHODS_WITH_BODIES = %w(post put patch options)
+    METHODS_WITH_BODIES = T.let(%w(post put patch options), T::Array[String])
 
+    sig { params(request_env: Faraday::Env).returns(Faraday::Response) }
     # do the thing
     def call(request_env)
       media_type = Rack::Request.new('CONTENT_TYPE' => request_env[:request_headers]['Content-Type']).media_type

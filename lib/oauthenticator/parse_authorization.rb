@@ -1,7 +1,12 @@
+# typed: strict
+
 module OAuthenticator
   # OAuthenticator::Error represents some problem with authenticating. it has an #errors attribute with error 
   # messages in the form we use.
   class Error < StandardError
+    extend T::Sig
+
+    sig { params(message: T.nilable(T.any(String, Symbol, Exception)), errors: T.nilable(T::Hash[String, T::Array[String]])).void }
     # @param message [String]
     # @param errors [Hash<String, Array<String>>]
     def initialize(message=nil, errors=nil)
@@ -9,6 +14,7 @@ module OAuthenticator
       @errors = errors
     end
 
+    sig { returns(T::Hash[String, T::Array[String]]) }
     # @return [Hash<String, Array<String>>]
     def errors
       @errors ||= Hash.new { |h,k| h[k] = [] }
@@ -25,6 +31,9 @@ module OAuthenticator
   class DuplicatedParameters < Error; end
 
   class << self
+    extend T::Sig
+
+    sig { params(header: String).returns(T::Hash[String, String]) }
     # @param header [String] an Authorization header
     # @return [Hash<String, String>] parsed authorization parameters
     # @raise [OAuthenticator::ParseError] if the header is not well-formed and cannot be parsed
@@ -58,20 +67,22 @@ module OAuthenticator
     end
 
     # @private
-    URI_PARSER = URI.const_defined?(:DEFAULT_PARSER) ? URI::DEFAULT_PARSER : URI
+    URI_PARSER = T.let(URI.const_defined?(:DEFAULT_PARSER) ? URI::DEFAULT_PARSER : URI, T.any(URI::RFC2396_Parser, T.class_of(URI)))
 
+    sig { params(value: String).returns(String) }
     # escape a value
     # @param value [String] value
     # @return [String] escaped value
     def escape(value)
-      URI_PARSER.escape(value.to_s, /[^a-z0-9\-\.\_\~]/i)
+      URI_PARSER.escape(value, /[^a-z0-9\-\.\_\~]/i)
     end
 
+    sig { params(value: String).returns(String) }
     # unescape a value
     # @param value [String] escaped value
     # @return [String] unescaped value
     def unescape(value)
-      URI_PARSER.unescape(value.to_s)
+      URI_PARSER.unescape(value)
     end
   end
 end
