@@ -65,7 +65,7 @@ module OAuthenticator
     def unauthenticated_response(errors)
       # default to a blank realm, I suppose
       realm = @options[:realm] || ''
-      response_headers = {"WWW-Authenticate" => %Q(OAuth realm="#{realm}"), 'Content-Type' => 'application/json'}
+      response_headers = {"www-authenticate" => %Q(OAuth realm="#{realm}"), 'content-type' => 'application/json'}
 
       body = {'errors' => errors}
       error_message = begin
