@@ -144,17 +144,17 @@ module AwesomeOAuthConfig
 
   # consumer secret, looked up by consumer key from ActiveRecord storage
   def consumer_secret
-    OAuthConsumer.where(:key => consumer_key).first.try(:secret)
+    OAuthConsumer.where(:key => consumer_key).first&.secret
   end
 
   # token secret, looked up by token 
   def token_secret
-    OAuthToken.where(:token => token).first.try(:secret)
+    OAuthToken.where(:token => token).first&.secret
   end
 
   # whether the token belongs to the consumer 
   def token_belongs_to_consumer?
-    OAuthToken.where(:token => token).first.try(:consumer_key) == consumer_key
+    OAuthToken.where(:token => token).first&.consumer_key == consumer_key
     # alternately:
     # OAuthToken.where(:token => token, :consumer_key => consumer_key).any?
   end
