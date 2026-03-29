@@ -58,7 +58,7 @@ module OAuthenticator
     end
 
     # @private
-    URI_PARSER = URI.const_defined?(:DEFAULT_PARSER) ? URI::DEFAULT_PARSER : URI
+    URI_PARSER = URI.const_defined?(:RFC2396_PARSER) ? URI::RFC2396_PARSER : URI.const_defined?(:DEFAULT_PARSER) ? URI::DEFAULT_PARSER : URI
 
     # escape a value
     # @param value [String] value
