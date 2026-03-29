@@ -243,16 +243,15 @@ module OAuthenticator
 
     # raise a nice error message for a method that needs to be implemented on a module of config methods 
     def config_method_not_implemented
-      caller_name = caller[0].match(%r(in `(.*?)'))[1]
-      using_middleware = caller.any? { |l| l =~ %r(oauthenticator/rack_authenticator.rb:.*`call') }
-      message = "method \##{caller_name} must be implemented on a module of oauth config methods, which is " + begin
-        if using_middleware
+      raise(NotImplementedError, [
+        "method \##{caller_locations[0].base_label} must be implemented on a module of oauth config methods, which is ",
+        if caller_locations.any? { |l| l.path =~ %r(oauthenticator/rack_authenticator.rb) && l.base_label == 'call' }
           "passed to OAuthenticator::RackAuthenticator using the option :config_methods."
         else
           "included in a subclass of OAuthenticator::SignedRequest, typically by passing it to OAuthenticator::SignedRequest.including_config(your_module)."
-        end
-      end + " Please consult the documentation."
-      raise NotImplementedError, message
+        end,
+        " Please consult the documentation.",
+      ].join)
     end
   end
 end
