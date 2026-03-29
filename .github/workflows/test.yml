@@ -21,7 +21,8 @@ jobs:
         runs-on:
         - ubuntu-latest
         - windows-latest
-        - macos-latest
+        - macos-15-intel
+        - macos-latest # arm64
         gemfile:
         - Gemfile_rack_1_faraday_1.rb
         - Gemfile_rack_2_faraday_1.rb
@@ -30,6 +31,8 @@ jobs:
         exclude:
         - ruby-version: '2.3'
           gemfile: Gemfile_rack_3_faraday_2.rb
+        - ruby-version: '2.3'
+          runs-on: macos-latest
         - ruby-version: truffleruby
           runs-on: windows-latest
         - ruby-version: truffleruby+graalvm
