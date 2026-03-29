@@ -24,5 +24,6 @@ Gem::Specification.new do |spec|
 
   spec.add_runtime_dependency 'rack', '>= 1.4', '< 4.0'
   spec.add_runtime_dependency 'json'
+  spec.add_runtime_dependency 'base64'
   spec.add_runtime_dependency 'faraday', '>= 0.9', '< 3.0'
 end
